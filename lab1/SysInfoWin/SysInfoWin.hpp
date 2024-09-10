@@ -3,13 +3,17 @@
 #include <VersionHelpers.h>
 #include <format>
 #include <sysinfoapi.h>
+#include <cstdint>
 
-constexpr int BYTES_IN_KILOBYTE = 1024;
-constexpr int KILOBYTES_IN_MEGABYTE = 1024;
-
-DWORDLONG BToMb(DWORDLONG bytes)
+namespace
 {
-    return bytes / BYTES_IN_KILOBYTE / KILOBYTES_IN_MEGABYTE;
+    constexpr int BYTES_IN_KILOBYTE = 1024;
+    constexpr int KILOBYTES_IN_MEGABYTE = 1024;
+
+    uint64_t BToMb(const uint64_t bytes)
+    {
+        return bytes / BYTES_IN_KILOBYTE / KILOBYTES_IN_MEGABYTE;
+    }
 }
 
 void DisplayInfo
@@ -26,7 +30,12 @@ void DisplayInfo
 
 std::string GetWinVersionMessage(std::string const& v)
 {
-    return std::format("Windows {} or greater", v);
+    return std::format("{} or greater", v);
+}
+
+std::string GetWinOSName()
+{
+    return "Windows";
 }
 
 std::string GetWinVersion()
@@ -87,28 +96,46 @@ std::string GetWinVersion()
     return "Windows version is less than Windows XP";
 }
 
-std::string GetLinuxProcCountInfo()
+unsigned GetWinProcCount()
 {
     SYSTEM_INFO info;
     GetSystemInfo(&info);
-    return std::to_string(info.dwNumberOfProcessors);
+    return info.dwNumberOfProcessors;
+}
+
+std::string GetProcCountInfo()
+{
+    return std::to_string(GetWinProcCount());
+}
+
+uint64_t GetWinTotalMemory()
+{
+    MEMORYSTATUSEX info;
+    info.dwLength = sizeof(MEMORYSTATUSEX);
+    if (!GlobalMemoryStatusEx(&info))
+    {
+        throw std::runtime_error("GlobalMemoryStatusEx failed");
+    }
+    return info.ullTotalPhys;
+}
+
+uint64_t GetWinFreeMemory()
+{
+    MEMORYSTATUSEX info;
+    info.dwLength = sizeof(MEMORYSTATUSEX);
+    if (!GlobalMemoryStatusEx(&info))
+    {
+        throw std::runtime_error("GlobalMemoryStatusEx failed");
+    }
+    return info.ullAvailPhys;
 }
 
 std::string GetRamInfo()
 {
-    MEMORYSTATUSEX info;
-    info.dwLength = sizeof(MEMORYSTATUSEX);
-    // добавить проверки возвращаемого значения (Исправлено)
-    if (!GlobalMemoryStatusEx(&info))
-    {
-        return "GlobalMemoryStatusEx failed";
-    }
-    auto total = info.ullTotalPhys;
-    auto inUse = total / 100 * info.dwMemoryLoad;
-    return std::format("{}MB / {}MB", BToMb(inUse), BToMb(total));
+    return std::format("{}MB / {}MB", BToMb(GetWinFreeMemory()), BToMb(GetWinTotalMemory()));
 }
 
 void PrintInfoWin()
 {
-    DisplayInfo(GetWinVersion(), GetRamInfo(), GetLinuxProcCountInfo());
+    DisplayInfo(GetWinOSName() + " " + GetWinVersion(), GetRamInfo(), GetProcCountInfo());
 }

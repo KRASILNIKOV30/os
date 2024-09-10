@@ -4,7 +4,7 @@
 #ifdef __linux__
 #include "../SysInfoLinux/SysInfoLinux.hpp"
 #elif _WIN32
-#include "../SysInfoLinux/SysInfoLinux.hpp"
+#include "../SysInfoWin/SysInfoWin.hpp"
 #else
 #error "OS not supported!"
 #endif
@@ -37,7 +37,30 @@ namespace
         return GetLinuxProcCount();
     }
 #elif _WIN32
+    std::string GetOSNameImpl()
+    {
+        return GetWinOSName();
+    }
 
+    std::string GetOSVersionImpl()
+    {
+        return GetWinVersion();
+    }
+
+    uint64_t GetFreeMemoryImpl()
+    {
+        return GetWinFreeMemory();
+    }
+
+    uint64_t GetTotalMemoryImpl()
+    {
+        return GetWinTotalMemory();
+    }
+
+    unsigned GetProcessorCountImpl()
+    {
+        return GetWinProcCount();
+    }
 #else
 #error "OS not supported!"
 #endif

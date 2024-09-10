@@ -2,13 +2,17 @@
 #include <sys/utsname.h>
 #include <sys/sysinfo.h>
 
-constexpr int BYTES_IN_KILOBYTE = 1024;
-constexpr int KILOBYTES_IN_MEGABYTE = 1024;
-
-unsigned long BToMb(const unsigned long bytes)
+namespace
 {
-    return bytes / BYTES_IN_KILOBYTE / KILOBYTES_IN_MEGABYTE;
+    constexpr int BYTES_IN_KILOBYTE = 1024;
+    constexpr int KILOBYTES_IN_MEGABYTE = 1024;
+
+    uint64_t BToMb(const uint64_t bytes)
+    {
+        return bytes / BYTES_IN_KILOBYTE / KILOBYTES_IN_MEGABYTE;
+    }
 }
+
 
 void DisplayInfo
 (
