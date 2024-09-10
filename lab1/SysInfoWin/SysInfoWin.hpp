@@ -98,15 +98,17 @@ std::string GetRamInfo()
 {
     MEMORYSTATUSEX info;
     info.dwLength = sizeof(MEMORYSTATUSEX);
-    GlobalMemoryStatusEx(&info);
+    // добавить проверки возвращаемого значения (Исправлено)
+    if (!GlobalMemoryStatusEx(&info))
+    {
+        return "GlobalMemoryStatusEx failed";
+    }
     auto total = info.ullTotalPhys;
     auto inUse = total / 100 * info.dwMemoryLoad;
     return std::format("{}MB / {}MB", BToMb(inUse), BToMb(total));
 }
 
-int main()
+void PrintInfoWin()
 {
     DisplayInfo(GetWinVersion(), GetRamInfo(), GetProcInfo());
-
-    return 0;
 }
