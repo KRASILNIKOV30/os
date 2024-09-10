@@ -51,7 +51,7 @@ uint64_t GetLinuxTotalMemory()
 {
     struct sysinfo sysInfo;
     // Добавить проверки возвр значения (Исправлено)
-    if (sysinfo(&sysInfo) < 0)
+    if (sysinfo(&sysInfo) != 0)
     {
         throw std::runtime_error("sysinfo() failed");
     }
@@ -62,7 +62,7 @@ uint64_t GetLinuxFreeMemory()
 {
     struct sysinfo sysInfo;
     // Добавить проверки возвр значения (Исправлено)
-    if (sysinfo(&sysInfo) < 0)
+    if (sysinfo(&sysInfo) != 0)
     {
         throw std::runtime_error("sysinfo() failed");
     }
