@@ -57,4 +57,9 @@ uint64_t SysInfo::GetTotalMemory() const
 
 unsigned SysInfo::GetProcessorCount() const
 {
+#ifdef __linux__
+    return GetLinuxProcCount();
+#elif _WIN32
+
+#endif
 }

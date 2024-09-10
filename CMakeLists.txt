@@ -17,6 +17,4 @@ add_executable(sys-info
         lab1/SysInfo/main.cpp
         lab1/SysInfo/SysInfo.h
         lab1/SysInfo/SysInfo.cpp
-        lab1/SysInfoLinux/SysInfoLinux.cpp
-        lab1/SysInfoWin/SysInfoWin.cpp
 )

@@ -87,7 +87,7 @@ std::string GetWinVersion()
     return "Windows version is less than Windows XP";
 }
 
-std::string GetProcInfo()
+std::string GetLinuxProcCountInfo()
 {
     SYSTEM_INFO info;
     GetSystemInfo(&info);
@@ -110,5 +110,5 @@ std::string GetRamInfo()
 
 void PrintInfoWin()
 {
-    DisplayInfo(GetWinVersion(), GetRamInfo(), GetProcInfo());
+    DisplayInfo(GetWinVersion(), GetRamInfo(), GetLinuxProcCountInfo());
 }

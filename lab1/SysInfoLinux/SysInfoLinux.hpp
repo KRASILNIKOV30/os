@@ -77,12 +77,12 @@ std::string GetLinuxRAMInfo()
     return std::to_string(free) + "MB / " + std::to_string(total) + "MB";
 }
 
-std::string GetProcInfo()
+unsigned GetLinuxProcCount()
 {
-    return std::to_string(get_nprocs_conf());
+    return get_nprocs_conf();
 }
 
 void PrintInfoLinux()
 {
-    DisplayInfo(GetOSInfo(), GetLinuxRAMInfo(), GetProcInfo());
+    DisplayInfo(GetOSInfo(), GetLinuxRAMInfo(), std::to_string(GetLinuxProcCount()));
 }
