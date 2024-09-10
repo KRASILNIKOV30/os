@@ -107,4 +107,6 @@ std::string GetRamInfo()
 int main()
 {
     DisplayInfo(GetWinVersion(), GetRamInfo(), GetProcInfo());
+
+    return 0;
 }
