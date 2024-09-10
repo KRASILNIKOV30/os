@@ -1,11 +1,6 @@
 #include "SysInfo.h"
-
 #ifdef __linux__
-
-#include <sys/utsname.h>
-#include <sys/sysinfo.h>
 #include "../SysInfoLinux/SysInfoLinux.hpp"
-
 #elif _WIN32
 
 #include <windows.h>
@@ -53,6 +48,11 @@ uint64_t SysInfo::GetFreeMemory() const
 
 uint64_t SysInfo::GetTotalMemory() const
 {
+#ifdef __linux__
+    return GetLinuxTotalMemory();
+#elif _WIN32
+
+#endif
 }
 
 unsigned SysInfo::GetProcessorCount() const
