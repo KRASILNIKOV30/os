@@ -18,3 +18,7 @@ add_executable(sys-info
         lab1/SysInfo/SysInfo.h
         lab1/SysInfo/SysInfo.cpp
 )
+
+add_executable(flip-case
+        lab2/flipCase/flip-case.cpp
+)
