@@ -4,17 +4,17 @@ project(os)
 set(CMAKE_CXX_STANDARD 20)
 
 add_executable(sys-info-win
-        lab1/SysInfoWin/SysInfoWin.hpp
-        lab1/SysInfoWin/SysInfoWin.cpp
+        lab1/sysInfoWin/SysInfoWin.hpp
+        lab1/sysInfoWin/SysInfoWin.cpp
 )
 
 add_executable(sys-info-linux
-        lab1/SysInfoLinux/SysInfoLinux.hpp
-        lab1/SysInfoLinux/SysInfoLinux.cpp
+        lab1/sysInfoLinux/SysInfoLinux.hpp
+        lab1/sysInfoLinux/SysInfoLinux.cpp
 )
 
 add_executable(sys-info
-        lab1/SysInfo/main.cpp
-        lab1/SysInfo/SysInfo.h
-        lab1/SysInfo/SysInfo.cpp
+        lab1/sysInfo/main.cpp
+        lab1/sysInfo/SysInfo.h
+        lab1/sysInfo/SysInfo.cpp
 )

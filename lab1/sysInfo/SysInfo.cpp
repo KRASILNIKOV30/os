@@ -2,7 +2,7 @@
 #include <string>
 
 #ifdef __linux__
-#include "../SysInfoLinux/SysInfoLinux.hpp"
+#include "../sysInfoLinux/SysInfoLinux.hpp"
 #elif _WIN32
 #include "../SysInfoWin/SysInfoWin.hpp"
 #else
