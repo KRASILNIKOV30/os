@@ -23,4 +23,5 @@ add_executable(flip-case
         lab2/flipCase/flip-case.cpp
 )
 add_executable(list-processes-linux lab2/listProcesses/list-processes-linux.cpp)
+
 add_executable(list-processes-win lab2/listProcesses/list-processes-win.cpp)
