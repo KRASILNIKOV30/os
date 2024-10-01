@@ -26,7 +26,7 @@ int main()
 		std::string line;
 		while (std::getline(file, line))
 		{
-			std::string field = line.substr(0, line.find(' '));
+			std::string field = line.substr(0, line.find('\t'));
 			if (field == "Name:")
 			{
 				std::cout << line << std::endl;
