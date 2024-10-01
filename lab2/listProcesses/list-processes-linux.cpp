@@ -11,7 +11,6 @@ int main()
 
 	for (const auto& fileEntry : fs::directory_iterator(dirPath))
 	{
-
 		if (!is_directory(fileEntry))
 		{
 			continue;
