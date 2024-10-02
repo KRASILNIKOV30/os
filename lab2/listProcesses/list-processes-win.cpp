@@ -1,84 +1,66 @@
+#include <windows.h>
+#include <psapi.h>
 #include <iostream>
 
-void PrintProcessNameAndID( DWORD processID )
+void PrintProcessInfo(DWORD pid)
 {
-    TCHAR szProcessName[MAX_PATH] = TEXT("<unknown>");
+    TCHAR szProcessName[MAX_PATH] = "<unknown>";
+    PROCESS_MEMORY_COUNTERS pmc;
 
-    // Get a handle to the process.
+    HANDLE hProcess = OpenProcess(
+        PROCESS_QUERY_INFORMATION |PROCESS_VM_READ,
+        FALSE,
+        pid
+    );
 
-    HANDLE hProcess = OpenProcess( PROCESS_QUERY_INFORMATION |
-                                   PROCESS_VM_READ,
-                                   FALSE, processID );
-
-    // Get the process name.
-
-    if (NULL != hProcess )
+    if (hProcess != NULL)
     {
         HMODULE hMod;
         DWORD cbNeeded;
 
-        if ( EnumProcessModules( hProcess, &hMod, sizeof(hMod),
-             &cbNeeded) )
+        if (EnumProcessModules(hProcess, &hMod, sizeof(hMod), &cbNeeded) )
         {
-            GetModuleBaseName( hProcess, hMod, szProcessName,
-                               sizeof(szProcessName)/sizeof(TCHAR) );
+            auto size = sizeof(szProcessName) / sizeof(TCHAR);
+            GetModuleBaseName(hProcess, hMod, szProcessName, size);
+            if (GetProcessMemoryInfo( hProcess, &pmc, sizeof(pmc)) == 0)
+            {
+                throw std::runtime_error("GetProcessMemoryInfo failed");
+            }
         }
     }
 
-    // Print the process name and identifier.
-
-    _tprintf( TEXT("%s  (PID: %u)\n"), szProcessName, processID );
-
-    // Release the handle to the process.
+    std::cout << pid << ": " << szProcessName << " " << pmc.WorkingSetSize / 1024 / 1024 << "MB" << std::endl;
 
     CloseHandle( hProcess );
 }
 
-int main( void )
+int main()
 {
-    // Get the list of process identifiers.
+    DWORD pids[1024];
+    DWORD bytesReturned;
+    DWORD procCount;
 
-    DWORD aProcesses[1024], cbNeeded, cProcesses;
-    unsigned int i;
-
-    if ( !EnumProcesses( aProcesses, sizeof(aProcesses), &cbNeeded ) )
+    if (!EnumProcesses(pids, sizeof(pids), &bytesReturned ) )
     {
         return 1;
     }
 
-
-    // Calculate how many process identifiers were returned.
-
-    cProcesses = cbNeeded / sizeof(DWORD);
-
-    // Print the name and process identifier for each process.
-
-    for ( i = 0; i < cProcesses; i++ )
+    procCount = bytesReturned / sizeof(DWORD);
+    unsigned int i;
+    for ( i = 0; i < procCount; i++ )
     {
-        if( aProcesses[i] != 0 )
+        if(pids[i] != 0 )
         {
-            PrintProcessNameAndID( aProcesses[i] );
+            try
+            {
+                PrintProcessInfo(pids[i]);
+            }
+            catch (std::exception const& e)
+            {
+               std::cout << e.what() << std::endl;
+            }
         }
     }
 
     return 0;
 }
-
-//using namespace std;
-//
-//int main()
-//{
-//    // Print the objective of program
-//    cout << "Running tasklist command to retrieve "
-//            "list of running processes:"
-//         << endl;
-//
-//    // Execute the tasklist command and display the output
-//    int returnValue = system("tasklist");
-//
-//    if (returnValue != 0) {
-//        cerr << "Error executing tasklist command" << endl;
-//        return 1;
-//    }
-//    return 0;
-//}

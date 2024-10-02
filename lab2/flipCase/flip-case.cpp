@@ -31,14 +31,26 @@ std::optional<Args> ParseArgs(int argc, char* argv[])
     return args;
 }
 
+char FlipCase(const char ch)
+{
+	if (std::isupper(ch))
+	{
+		return tolower(ch);
+	}
+	if (std::islower(ch))
+	{
+		return toupper(ch);
+	}
 
+	return ch;
+}
 
 void FlipCaseFile(std::ifstream& input, std::ofstream& output)
 {
 	char ch;
 	while (input.get(ch))
 	{
-		if (!output.put(std::toupper(ch)))
+		if (!output.put(FlipCase(ch)))
 		{
 			throw std::runtime_error("Failed to save data on disk");
 		}
@@ -70,7 +82,7 @@ void WaitChildProcesses(std::vector<pid_t>& childPids)
 		std::cout << "Child process " << childPid << " is over" << std::endl;
 	}
 }
-
+// узнать про zombie
 int main(const int argc, char* argv[])
 {
 	const auto args = ParseArgs(argc, argv);
