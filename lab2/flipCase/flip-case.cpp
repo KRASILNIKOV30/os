@@ -5,9 +5,6 @@
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fstream>
-#include <ranges>
-#include <bits/ranges_algo.h>
-
 
 struct Args
 {
@@ -33,16 +30,17 @@ std::optional<Args> ParseArgs(int argc, char* argv[])
 
 char FlipCase(const char ch)
 {
-	if (std::isupper(ch))
+	const auto castedChar = static_cast<unsigned char>(ch);
+	if (std::isupper(castedChar))
 	{
-		return tolower(ch);
+		return tolower(castedChar);
 	}
-	if (std::islower(ch))
+	if (std::islower(castedChar))
 	{
-		return toupper(ch);
+		return toupper(castedChar);
 	}
 
-	return ch;
+	return static_cast<char>(castedChar);
 }
 
 void FlipCaseFile(std::ifstream& input, std::ofstream& output)
@@ -82,7 +80,8 @@ void WaitChildProcesses(std::vector<pid_t>& childPids)
 		std::cout << "Child process " << childPid << " is over" << std::endl;
 	}
 }
-// узнать про zombie
+
+// узнать про zombie (Исправлено)
 int main(const int argc, char* argv[])
 {
 	const auto args = ParseArgs(argc, argv);
