@@ -18,21 +18,20 @@ void SignalHandler(const int signum)
 	}
 }
 
+// Вынести в класс Child и, возможно, Manager
+// Убрать глобальную переменную
 void PrintAliveMessages()
 {
 	while (!exitRequested.test())
 	{
 		std::this_thread::sleep_for(std::chrono::seconds(5));
-		if (!exitRequested.test())
-		{
-			std::cout << "Child process " << getpid() << " is still alive" << std::endl;
-		}
-		else
+		if (exitRequested.test())
 		{
 			return;
 		}
-	}
 
+		std::cout << "Child process " << getpid() << " is still alive" << std::endl;
+	}
 }
 
 void ChildProcessAction()
@@ -50,7 +49,7 @@ bool KillChild(std::vector<pid_t>& childPids)
 	{
 		return false;
 	}
-	auto pidToKill = childPids.back();
+	const auto pidToKill = childPids.back();
 	if (kill(pidToKill, SIGTERM) != 0)
 	{
 		std::cerr << "kill failed" << std::endl;
@@ -68,6 +67,8 @@ int main()
 {
 	pid_t pid = getpid();
 	std::string command;
+	//list
+	//Можно добавить в деструкторе убийство всех детей
 	std::vector<pid_t> childPids;
 
 	while (command != "exit" && pid)
@@ -88,7 +89,6 @@ int main()
 			{
 				std::cerr << "No children to kill" << std::endl;
 			}
-
 		}
 	}
 
