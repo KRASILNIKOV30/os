@@ -30,3 +30,4 @@ add_executable(zombie lab2/zombie/zombie.cpp)
 
 add_executable(signal-handler lab3/signal-handler.cpp)
 add_executable(kill-child lab3/kill-child.cpp)
+add_executable(pipes lab3/pipes.cpp)
