@@ -22,7 +22,11 @@ public:
 		{
 			throw std::runtime_error("pipe() failed");
 		}
-		action(FileDesc(myPipe1[0]), FileDesc(myPipe2[1]));
+		m_pid = fork();
+		if (m_pid == 0)
+		{
+			action(FileDesc(myPipe1[0]), FileDesc(myPipe2[1]));
+		}
 		m_input = FileDesc(myPipe2[0]);
 		m_output = FileDesc(myPipe1[1]);
 	}
@@ -65,7 +69,7 @@ private:
 			.type = RequestType::EXIT,
 		});
 		const auto exitCommandBytes = std::bit_cast<uint8_t*>(&exitCommand);
-		SendToChild(exitCommandBytes, sizeof(exitCommandBytes));
+		SendToChild(exitCommandBytes, sizeof(Request));
 		if (waitpid(m_pid, nullptr, 0) == -1)
 		{
 			std::cerr << "waitpid() failed" << std::endl;

@@ -17,21 +17,14 @@ SCENARIO("fetch sum calculation")
 	GIVEN("fetcher")
 	{
 		auto pipedCommandHandler = PipedChildProcessManager(RunCommandHandler);
+		if (pipedCommandHandler.GetPid() == 0)
+		{
+			return;
+		}
 		const Fetcher fetcher(pipedCommandHandler);
 
-		THEN("can fetch sum from one argument")
-		{
-			CHECK(fetcher.FetchSumCalculation({ 5 }) == 5);
-		}
-
-		AND_THEN("can fetch sum from many arguments")
-		{
-			CHECK(fetcher.FetchSumCalculation({ 1, 2, 3, -4 }) == 2);
-		}
-
-		AND_THEN("can fetch sum from zero arguments")
-		{
-			CHECK(fetcher.FetchSumCalculation({}) == 0);
-		}
+		CHECK(fetcher.FetchSumCalculation({ 5 }) == 5);
+		CHECK(fetcher.FetchSumCalculation({ 1, 2, 3, -4 }) == 2);
+		CHECK(fetcher.FetchSumCalculation({}) == 0);
 	}
 }
