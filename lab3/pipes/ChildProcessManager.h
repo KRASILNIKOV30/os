@@ -1,13 +1,13 @@
 #pragma once
 #include "FileDesc.h"
 #include "Request.h"
-
 #include <bit>
 #include <functional>
 #include <iostream>
 #include <stdexcept>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/socket.h>
 
 class PipedChildProcessManager
 {
@@ -16,19 +16,18 @@ public:
 
 	explicit PipedChildProcessManager(PipedAction&& action)
 	{
-		int myPipe1[2];
-		int myPipe2[2];
-		if (pipe(myPipe1) != 0 || pipe(myPipe2) != 0)
+		int socket[2];
+		if (socketpair(PF_LOCAL, SOCK_STREAM, 0, socket) != 0)
 		{
-			throw std::runtime_error("pipe() failed");
+			throw std::runtime_error("socketpair() failed");
 		}
 		m_pid = fork();
 		if (m_pid == 0)
 		{
-			action(FileDesc(myPipe1[0]), FileDesc(myPipe2[1]));
+			action(FileDesc(socket[1]), FileDesc(socket[1]));
 		}
-		m_input = FileDesc(myPipe2[0]);
-		m_output = FileDesc(myPipe1[1]);
+		m_input = FileDesc(socket[0]);
+		m_output = FileDesc(socket[0]);
 	}
 
 	size_t SendToChild(const void* buffer, const size_t length)

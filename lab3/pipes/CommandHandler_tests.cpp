@@ -26,5 +26,7 @@ SCENARIO("fetch sum calculation")
 		CHECK(fetcher.FetchSumCalculation({ 5 }) == 5);
 		CHECK(fetcher.FetchSumCalculation({ 1, 2, 3, -4 }) == 2);
 		CHECK(fetcher.FetchSumCalculation({}) == 0);
+
+		CHECK(fetcher.FetchLongestWordSearching("in.txt") == "hello");
 	}
 }
