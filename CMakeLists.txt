@@ -34,20 +34,22 @@ add_executable(signal-handler lab3/signal-handler.cpp)
 add_executable(kill-child lab3/kill-child.cpp)
 
 add_executable(pipes lab3/pipes/pipes.cpp
-        lab3/pipes/CommandHandler.h
-        lab3/pipes/CommandHandler.cpp
+        lab3/pipes/pipes.cpp
         lab3/pipes/FileDesc.h
         lab3/pipes/Request.h
-)
-
-add_executable(pipes_tests
-        lab3/pipes/CommandHandler_tests.cpp
-        lab3/pipes/FileDesc.h
-        lab3/pipes/Request.h
-        lab3/pipes/CommandHandler.h
-        lab3/pipes/CommandHandler.cpp
-        lab3/pipes/ChildProcessManager.h
+        lab3/pipes/Child.h
+        lab3/pipes/ProcessManager.h
         lab3/pipes/Fetcher.h
 )
 
+add_executable(pipes_tests
+        lab3/pipes/pipes_tests.cpp
+        lab3/pipes/FileDesc.h
+        lab3/pipes/Request.h
+        lab3/pipes/Child.h
+        lab3/pipes/ProcessManager.h
+        lab3/pipes/Fetcher.h
+)
 target_link_libraries(pipes_tests PRIVATE Catch2::Catch2WithMain)
+
+add_subdirectory(lab4)

@@ -1,57 +1,58 @@
+#include "Fetcher.h"
 #include <iostream>
-#include <stdexcept>
-#include <system_error>
-#include <unistd.h>
-#include <utility>
+#include <sstream>
 #include <vector>
 
-void HandleAddCommand()
+void HandleAddCommand(Fetcher const& fetcher)
 {
+	std::string argsStr;
+	std::getline(std::cin, argsStr);
+	std::istringstream str(argsStr);
+	std::vector<int> args;
+	int arg;
+	while (str >> arg)
+	{
+		args.push_back(arg);
+	}
+
+	std::cout << "sum is " << fetcher.FetchSumCalculation(args) << std::endl;
 }
 
-void ParseAddCommand()
+void HandleLongestWordCommand(Fetcher const& fetcher)
 {
-	std::string paramsLine;
-	std::getline(std::cin, paramsLine);
-	int param;
-	std::vector<int> params;
-	while (std::cin >> param)
-	{
-		params.emplace_back(param);
-	}
+	std::string fileName;
+	std::cin >> fileName;
 
-	int myPipe[2];
-	if (pipe(myPipe) != 0)
-	{
-		throw std::system_error(errno, std::generic_category());
-	}
-
-	pid_t pid = fork();
-	if (pid == 0)
-	{
-		HandleAddCommand();
-	}
-
+	std::cout << "longest word is " << fetcher.FetchLongestWordSearching(fileName) << std::endl;
 }
 
 int main()
 {
+	ProcessManager pipedCommandHandler{ SocketPair() };
+	if (pipedCommandHandler.GetPid() == 0)
+	{
+		return EXIT_SUCCESS;
+	}
+	const Fetcher fetcher(std::move(pipedCommandHandler));
+
 	std::string command;
 	while (true)
 	{
 		std::cin >> command;
 		if (command == "add")
 		{
-
+			HandleAddCommand(fetcher);
 		}
 		else if (command == "longest_word")
 		{
-
+			HandleLongestWordCommand(fetcher);
 		}
 		if (command == "exit")
 		{
 			break;
 		}
 	}
+
+	return EXIT_SUCCESS;
 }
 

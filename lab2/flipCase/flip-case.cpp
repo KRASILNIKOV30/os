@@ -43,7 +43,7 @@ char FlipCase(const char ch)
 	return static_cast<char>(castedChar);
 }
 
-void FlipCaseFile(std::ifstream& input, std::ofstream& output)
+void FlipCase(std::ifstream& input, std::ofstream& output)
 {
 	char ch;
 	while (input.get(ch))
@@ -55,13 +55,13 @@ void FlipCaseFile(std::ifstream& input, std::ofstream& output)
 	}
 }
 
-void HandleChildProcess(std::string const& fileName)
+void FlipCaseFile(std::string const& fileName)
 {
 	const auto selfPid = getpid();
 	std::cout << "Process " << selfPid << " is processing " << fileName << std::endl;
 	auto input = std::ifstream(fileName);
 	auto output = std::ofstream(fileName + ".out");
-	FlipCaseFile(input, output);
+	FlipCase(input, output);
 	std::cout << "Process " << selfPid << " has finished writing to " << fileName << ".out" << std::endl;
 }
 
@@ -104,7 +104,7 @@ int main(const int argc, char* argv[])
 		}
 		if (pid == 0)
 		{
-			HandleChildProcess(*fileIt);
+			FlipCaseFile(*fileIt);
 		}
 	}
 

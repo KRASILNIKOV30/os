@@ -1,11 +1,12 @@
 #pragma once
-#include "ChildProcessManager.h"
+#include "ProcessManager.h"
 #include <span>
+#include <vector>
 
 class Fetcher
 {
 public:
-	explicit Fetcher(PipedChildProcessManager& childProcessManager)
+	explicit Fetcher(ProcessManager&& childProcessManager)
 		: childProcessManager(childProcessManager)
 	{
 	}
@@ -54,5 +55,6 @@ private:
 		return *std::bit_cast<Response*>(&responseBuffer);
 	}
 
-	PipedChildProcessManager& childProcessManager;
+	// переименовать
+	ProcessManager& childProcessManager;
 };
