@@ -53,3 +53,4 @@ add_executable(pipes_tests
 target_link_libraries(pipes_tests PRIVATE Catch2::Catch2WithMain)
 
 add_subdirectory(lab4)
+add_subdirectory(lab5)
