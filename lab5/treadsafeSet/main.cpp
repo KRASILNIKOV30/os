@@ -1,8 +1,10 @@
 #include "TreadsafeSet.h"
+#include "../../timer/Timer.h"
 #include <iostream>
 #include <cmath>
 #include <optional>
 #include <thread>
+#include <memory>
 
 struct Args
 {
@@ -12,7 +14,7 @@ struct Args
 
 std::optional<Args> ParseArgs(const int argc, char* argv[])
 {
-	if (argc != 4)
+	if (argc != 3)
 	{
 		std::cout << "Usage: " << argv[0] << " <limit> <threadsNum>" << std::endl;
 		return std::nullopt;
@@ -59,15 +61,30 @@ bool IsPrime(const uint64_t n)
 	return true;
 }
 
-void FindPrimes(ThreadsafeSet<uint64_t>& primes, const uint64_t from, const uint64_t to)
+void FindPrimesInRange(const std::shared_ptr<ISet<uint64_t>>& primes, const uint64_t start, const uint64_t end)
 {
-	for (uint64_t i = from; i <= to; ++i)
+	for (uint64_t i = start; i <= end; ++i)
 	{
 		if (IsPrime(i))
 		{
-			primes.Insert(i);
+			primes->Insert(i);
 		}
 	}
+}
+
+void FindPrimes(uint64_t const limit, int const threadNum, const std::shared_ptr<ISet<uint64_t>>& primes)
+{
+
+	std::vector<std::jthread> threads;
+	const auto range = limit / threadNum;
+
+	for (unsigned int i = 0; i < threadNum - 1; ++i)
+	{
+		uint64_t start = i * range + 2;
+		uint64_t end = start + range - 1;
+		threads.emplace_back(FindPrimesInRange, std::ref(primes), start, end);
+	}
+	FindPrimesInRange(primes, limit - range, limit);
 }
 
 int main(const int argc, char* argv[])
@@ -78,19 +95,30 @@ int main(const int argc, char* argv[])
 		return EXIT_FAILURE;
 	}
 
-	ThreadsafeSet<uint64_t> primes;
-
 	const auto limit = args->limit;
 	const auto threadsNum = args->threadsNum;
 
-	std::vector<std::jthread> threads;
-	uint64_t range = limit / threadsNum;
+	std::shared_ptr<ISet<uint64_t>> primesSet = std::make_shared<Set<uint64_t>>();
+	std::shared_ptr<ISet<uint64_t>> threadsafePrimesSet = std::make_shared<ThreadsafeSet<uint64_t>>();
 
-	for (unsigned int i = 0; i < threadsNum; ++i)
+	for (int tNum = 1; tNum <= threadsNum; ++tNum)
 	{
-		uint64_t start = i * range + 2;
-		uint64_t end = (i == threadsNum - 1) ? limit : start + range - 1;
-		threads.emplace_back(FindPrimes, std::ref(primes), start, end);
+		auto& primes = tNum == 1
+			? primesSet
+			: threadsafePrimesSet;
+		MeasureTime(std::cout, std::to_string(tNum) + " thread sorting", FindPrimes, limit, tNum, std::ref(primes));
+	}
+
+	std::cout << std::endl << "simple set primes:" << std::endl;
+	for (int i = 0; i < 10; ++i)
+	{
+		std::cout << primesSet->Get(i) << std::endl;
+	}
+
+	std::cout << std::endl << "threadsafe set primes:" << std::endl;
+	for (int i = 0; i < 10; ++i)
+	{
+		std::cout << threadsafePrimesSet->Get(i) << std::endl;
 	}
 
 	return EXIT_SUCCESS;
