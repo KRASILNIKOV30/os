@@ -11,7 +11,7 @@ TEST_CASE("dispatch and execute")
 
 	pool.Dispatch([&]() {
 		std::this_thread::sleep_for(std::chrono::milliseconds(100));
-		counter.fetch_add(1, std::memory_order_relaxed);
+		counter.fetch_add(1);
 	});
 
 	pool.Wait();
@@ -36,11 +36,11 @@ TEST_CASE("wait until all tasks are done")
 
 	pool.Dispatch([&]() {
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
-		counter.fetch_add(1, std::memory_order_relaxed);
+		counter.fetch_add(1);
 	});
 	pool.Dispatch([&]() {
 		std::this_thread::sleep_for(std::chrono::milliseconds(50));
-		counter.fetch_add(1, std::memory_order_relaxed);
+		counter.fetch_add(1);
 	});
 
 	pool.Wait();
@@ -57,7 +57,7 @@ TEST_CASE("multiple threads dispatch")
 	{
 		pool.Dispatch([&]() {
 			std::this_thread::sleep_for(std::chrono::milliseconds(10));
-			counter.fetch_add(1, std::memory_order_relaxed);
+			counter.fetch_add(1);
 		});
 	}
 
