@@ -1,6 +1,5 @@
 #pragma once
-#include <string>
-#include <vector>
+#include <cstddef>
 
 enum class RequestType
 {
@@ -9,14 +8,16 @@ enum class RequestType
 	EXIT,
 };
 
+// request header
 struct Request
 {
 	RequestType type;
 	size_t bodyLength;
 };
 
+// header и body
 struct Response
 {
 	int sum;
-	int longestWordLength;
+	size_t longestWordLength;
 };

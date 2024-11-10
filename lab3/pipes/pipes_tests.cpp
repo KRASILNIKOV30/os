@@ -1,7 +1,5 @@
-#include "ChildProcessManager.h"
-#include "Request.h"
-#include "CommandHandler.h"
-#include "CommandHandler.cpp"
+#include "ProcessManager.h"
+#include "Child.h"
 #include "Fetcher.h"
 #include "catch2/internal/catch_compiler_capabilities.hpp"
 #include "catch2/catch_test_macros.hpp"
@@ -16,15 +14,17 @@ SCENARIO("fetch sum calculation")
 {
 	GIVEN("fetcher")
 	{
-		auto pipedCommandHandler = PipedChildProcessManager(RunCommandHandler);
+		ProcessManager pipedCommandHandler{ SocketPair() };
 		if (pipedCommandHandler.GetPid() == 0)
 		{
 			return;
 		}
-		const Fetcher fetcher(pipedCommandHandler);
+		const Fetcher fetcher(std::move(pipedCommandHandler));
 
 		CHECK(fetcher.FetchSumCalculation({ 5 }) == 5);
 		CHECK(fetcher.FetchSumCalculation({ 1, 2, 3, -4 }) == 2);
 		CHECK(fetcher.FetchSumCalculation({}) == 0);
+
+		CHECK(fetcher.FetchLongestWordSearching("in.txt") == "hello");
 	}
 }

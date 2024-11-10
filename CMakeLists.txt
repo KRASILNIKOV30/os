@@ -33,24 +33,24 @@ add_executable(zombie lab2/zombie/zombie.cpp)
 add_executable(signal-handler lab3/signal-handler.cpp)
 add_executable(kill-child lab3/kill-child.cpp)
 
-add_executable(pipes lab3/pipes.cpp
-        lab3/CommandParser.h
-        lab3/CommandHandler.h
-        lab3/CommandHandler.cpp
-        lab3/FileDesc.h
-        lab3/Request.h
+add_executable(pipes lab3/pipes/pipes.cpp
+        lab3/pipes/pipes.cpp
+        lab3/pipes/FileDesc.h
+        lab3/pipes/Request.h
+        lab3/pipes/Child.h
+        lab3/pipes/ProcessManager.h
+        lab3/pipes/Fetcher.h
 )
 
 add_executable(pipes_tests
-        lab3/CommandParser_tests.cpp
-        lab3/CommandHandler_tests.cpp
-        lab3/FileDesc.h
-        lab3/Request.h
-        lab3/CommandHandler.h
-        lab3/CommandHandler.cpp
-        lab3/ChildProcessManager.h
-        lab3/ChildProcessManager.h
-        lab3/Fetcher.h
+        lab3/pipes/pipes_tests.cpp
+        lab3/pipes/FileDesc.h
+        lab3/pipes/Request.h
+        lab3/pipes/Child.h
+        lab3/pipes/ProcessManager.h
+        lab3/pipes/Fetcher.h
 )
-
 target_link_libraries(pipes_tests PRIVATE Catch2::Catch2WithMain)
+
+add_subdirectory(lab4)
+add_subdirectory(lab5)

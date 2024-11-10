@@ -1,44 +1,35 @@
 #pragma once
-#include "FileDesc.h"
+#include "Child.h"
 #include "Request.h"
-
 #include <bit>
-#include <functional>
 #include <iostream>
-#include <stdexcept>
 #include <unistd.h>
 #include <sys/wait.h>
+#include <sys/socket.h>
 
-class PipedChildProcessManager
+class ProcessManager
 {
 public:
-	using PipedAction = std::function<void(FileDesc&&, FileDesc&&)>;
-
-	explicit PipedChildProcessManager(PipedAction&& action)
+	explicit ProcessManager(SocketPair&& socketPair)
+		: m_socketPair(socketPair)
+		  , m_socket(m_socketPair.GetParentSocket())
 	{
-		int myPipe1[2];
-		int myPipe2[2];
-		if (pipe(myPipe1) != 0 || pipe(myPipe2) != 0)
-		{
-			throw std::runtime_error("pipe() failed");
-		}
 		m_pid = fork();
 		if (m_pid == 0)
 		{
-			action(FileDesc(myPipe1[0]), FileDesc(myPipe2[1]));
+			Child child(m_socketPair.GetChildSocket());
+			child.Run();
 		}
-		m_input = FileDesc(myPipe2[0]);
-		m_output = FileDesc(myPipe1[1]);
 	}
 
 	size_t SendToChild(const void* buffer, const size_t length)
 	{
-		return m_output.Write(buffer, length);
+		return m_socket.Write(buffer, length);
 	}
 
 	size_t ReceiveFromChild(void* buffer, const size_t length)
 	{
-		return m_input.Read(buffer, length);
+		return m_socket.Read(buffer, length);
 	}
 
 	[[nodiscard]] pid_t GetPid() const
@@ -46,7 +37,7 @@ public:
 		return m_pid;
 	}
 
-	~PipedChildProcessManager()
+	~ProcessManager()
 	{
 		if (m_pid > 0)
 		{
@@ -64,11 +55,11 @@ public:
 private:
 	void SendExitRequest()
 	{
-		auto exitCommand = Request(
+		auto exitRequest = Request(
 		{
 			.type = RequestType::EXIT,
 		});
-		const auto exitCommandBytes = std::bit_cast<uint8_t*>(&exitCommand);
+		const auto exitCommandBytes = std::bit_cast<uint8_t*>(&exitRequest);
 		SendToChild(exitCommandBytes, sizeof(Request));
 		if (waitpid(m_pid, nullptr, 0) == -1)
 		{
@@ -76,7 +67,7 @@ private:
 		}
 	}
 
-	FileDesc m_input;
-	FileDesc m_output;
+	SocketPair m_socketPair;
+	Socket m_socket;
 	pid_t m_pid = getpid();
 };
