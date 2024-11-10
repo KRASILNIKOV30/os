@@ -52,5 +52,10 @@ add_executable(pipes_tests
 )
 target_link_libraries(pipes_tests PRIVATE Catch2::Catch2WithMain)
 
+enable_testing()
+
 add_subdirectory(lab4)
 add_subdirectory(lab5)
+
+add_library(catch2 INTERFACE)
+target_include_directories(catch2 INTERFACE lib/catch2/)

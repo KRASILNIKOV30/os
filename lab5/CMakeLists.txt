@@ -6,4 +6,14 @@ add_executable(treadsafe-set
         treadsafeSet/ISet.h
         treadsafeSet/Timer.h
 )
+
+add_executable(lab5-tests
+        bgThreadDispatcher/BgThreadDispatcher.h
+        tests/BgThreadDispatcher-tests.cpp
+)
+
 set_target_properties(treadsafe-set PROPERTIES LINKER_LANGUAGE CXX)
+set_target_properties(lab5-tests PROPERTIES LINKER_LANGUAGE CXX)
+
+target_link_libraries(lab5-tests PUBLIC catch2)
+add_test(NAME lab5-tests COMMAND lab5-tests)
