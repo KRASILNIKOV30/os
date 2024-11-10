@@ -83,13 +83,10 @@ private:
 				std::cerr << "Exception caught in background task: " << e.what() << std::endl;
 			}
 
+			m_isWorking = false;
+			if (m_tasks.empty())
 			{
-				std::lock_guard<std::mutex> lock(m_queueMutex);
-				m_isWorking = false;
-				if (m_tasks.empty())
-				{
-					m_condition.notify_all();
-				}
+				m_condition.notify_all();
 			}
 		}
 	}

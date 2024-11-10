@@ -8,8 +8,10 @@ add_executable(treadsafe-set
 )
 
 add_executable(lab5-tests
+        threadPool/ThreadPool.h
         bgThreadDispatcher/BgThreadDispatcher.h
         tests/BgThreadDispatcher-tests.cpp
+        tests/ThreadPool-tests.cpp
 )
 
 set_target_properties(treadsafe-set PROPERTIES LINKER_LANGUAGE CXX)
