@@ -1,3 +1,8 @@
+#include <vector>
+#include <string>
+#include <optional>
+#include <iostream>
+
 struct Args
 {
 	std::vector<std::string> files;
