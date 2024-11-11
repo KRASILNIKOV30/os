@@ -26,10 +26,8 @@ TEST_CASE("Test BgThreadDispatcher with multiple tasks")
 		task3Done = true;
 	});
 
-	// Wait for all tasks to finish
 	dispatcher.Wait();
 
-	// Check that tasks completed in order
 	REQUIRE(task1Done);
 	REQUIRE(task2Done);
 	REQUIRE(task3Done);

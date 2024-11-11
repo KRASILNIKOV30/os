@@ -72,5 +72,6 @@
         "variant": "cpp"
     },
     "editor.formatOnSave": true,
-    "clang-format.executable": "/usr/bin/clang-format"
+    "clang-format.executable": "/usr/bin/clang-format",
+    "C_Cpp.errorSquiggles": "disabled"
 }

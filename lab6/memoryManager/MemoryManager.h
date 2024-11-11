@@ -1,37 +1,97 @@
 #pragma once
+#include <algorithm>
+#include <cassert>
+#include <cstddef>
+#include <cstdint>
+#include <iostream>
 
 class MemoryManager
 {
 public:
-	// Инициализирует менеджер памяти непрерывным блоком size байт,
-	// начиная с адреса start.
-	// Возвращает true в случае успеха и false в случае ошибки
-	// Методы MemAlloc и MemFree должны работать с этим блоком памяти для хранения данных.
-	// Указатель start должен быть выровнен по адресу, кратному sizeof(std::max_align_t)
-	MemoryManager(void* start, size_t size) noexcept
+	MemoryManager(void* start, size_t size)
+		: m_start(static_cast<uint8_t*>(start))
+		, m_size(size)
+		, m_freeList(nullptr)
 	{
+		if (reinterpret_cast<std::uintptr_t>(m_start) % alignof(std::max_align_t) != 0)
+		{
+			throw std::invalid_argument("Start address must be aligned to std::max_align_t");
+		}
+
+		m_freeList = reinterpret_cast<BlockHeader*>(m_start);
+		m_freeList->size = size;
+		m_freeList->next = nullptr;
 	}
 
 	MemoryManager(const MemoryManager&) = delete;
 	MemoryManager& operator=(const MemoryManager&) = delete;
 
-	// Выделяет блок памяти внутри размером size байт и возвращает адрес выделенного
-	// блока памяти. Возвращённый указатель должен быть выровнен по адресу, кратному align.
-	// Параметр align должен быть степенью числа 2.
-	// В случае ошибки (нехватка памяти, невалидные параметры) возвращает nullptr.
-	// Полученный таким образом блок памяти должен быть позднее освобождён методом Free
-	void* Allocate(size_t size, size_t align = sizeof(std::max_align_t)) noexcept
+	void* Allocate(size_t size, size_t align = alignof(std::max_align_t)) noexcept
 	{
+		if (size == 0 || align == 0 || (align & (align - 1)) != 0)
+		{
+			return nullptr;
+		}
+
+		BlockHeader** prev = &m_freeList;
+		BlockHeader* curr = m_freeList;
+
+		while (curr != nullptr)
+		{
+			uintptr_t addr = reinterpret_cast<uintptr_t>(curr) + sizeof(BlockHeader);
+			size_t alignedAddr = (addr + align - 1) & ~(align - 1);
+
+			size_t totalSize = alignedAddr - reinterpret_cast<uintptr_t>(curr);
+
+			if (curr->size >= totalSize + size)
+			{
+				// Блок подходит, выделяем память
+
+				// Разделяем блок, если оставшееся пространство достаточно для нового блока
+				if (curr->size >= totalSize + size + sizeof(BlockHeader))
+				{
+					BlockHeader* newBlock = reinterpret_cast<BlockHeader*>(alignedAddr + size);
+					newBlock->size = curr->size - totalSize - size;
+					newBlock->next = curr->next;
+
+					// Переносим указатель на новый свободный блок
+					curr->size = totalSize;
+					curr->next = newBlock;
+				}
+
+				// Удаляем блок из списка свободных
+				*prev = curr->next;
+				return reinterpret_cast<void*>(alignedAddr);
+			}
+
+			prev = &curr->next;
+			curr = curr->next;
+		}
+
 		return nullptr;
 	}
 
-	// Освобождает область памяти, ранее выделенную методом Allocate,
-	// делая её пригодной для повторного использования. После этого указатель
-	// перестаёт быть валидным.
-	// Если addr — нулевой указатель, метод не делает ничего
-	// Если addr — не является валидным указателем, возвращённым ранее методом Allocate,
-	// поведение метода не определено.
 	void Free(void* addr) noexcept
 	{
+		if (!addr)
+		{
+			return;
+		}
+
+		BlockHeader* block = reinterpret_cast<BlockHeader*>(reinterpret_cast<uintptr_t>(addr) - sizeof(BlockHeader));
+
+		block->next = m_freeList;
+		m_freeList = block;
 	}
+
+private:
+	struct BlockHeader
+	{
+		size_t size; // Размер блока памяти
+		BlockHeader* next; // Указатель на следующий свободный блок
+	};
+
+	uint8_t* m_start; // Начало блока памяти
+	size_t m_size; // Размер блока памяти
+	BlockHeader* m_freeList; // Список свободных блоков
 };
