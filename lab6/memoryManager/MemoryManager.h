@@ -36,20 +36,20 @@ public:
 		while (curr != nullptr)
 		{
 			constexpr auto headerSize = sizeof(BlockHeader);
-			const uintptr_t addr = reinterpret_cast<uintptr_t>(curr) + headerSize;
+			const auto addr = reinterpret_cast<ptrdiff_t>(curr) + headerSize;
 			const size_t alignedAddr = (addr + align - 1) & ~(align - 1);
 
-			size_t totalSize = alignedAddr - reinterpret_cast<uintptr_t>(curr);
+			const size_t offset = alignedAddr - reinterpret_cast<uintptr_t>(curr);
 
-			if (curr->size >= totalSize + size)
+			if (curr->size >= offset + size)
 			{
-				if (curr->size > totalSize + size + sizeof(BlockHeader))
+				if (curr->size > offset + size + sizeof(BlockHeader))
 				{
 					auto* newBlock = reinterpret_cast<BlockHeader*>(alignedAddr + size);
-					newBlock->size = curr->size - totalSize - size;
+					newBlock->size = curr->size - offset - size;
 					newBlock->next = curr->next;
 
-					curr->size = totalSize;
+					curr->size = offset;
 					curr->next = newBlock;
 				}
 
@@ -59,7 +59,6 @@ public:
 				return reinterpret_cast<void*>(alignedAddr);
 			}
 
-			prev = &curr->next;
 			curr = curr->next;
 		}
 

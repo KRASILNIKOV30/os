@@ -350,3 +350,24 @@ SCENARIO("treadsafe")
 		}
 	}
 }
+
+SCENARIO("multiple freed blocks")
+{
+	GIVEN("A memory manager initialized with 128B of memory")
+	{
+		char buffer[128];
+		MemoryManager manager(buffer, sizeof(buffer));
+
+		WHEN("allocate and free some memory")
+		{
+			auto const ptr1 = manager.Allocate(16);
+			manager.Free(ptr1);
+
+			THEN("can allocate larger block of memory")
+			{
+				auto const ptr2 = manager.Allocate(17);
+				CHECK(ptr2 == buffer + 48);
+			}
+		}
+	}
+}
