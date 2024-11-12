@@ -43,7 +43,7 @@ public:
 
 			if (curr->size >= offset + size)
 			{
-				if (curr->size > offset + size + sizeof(BlockHeader))
+				if (curr->size > offset + size + headerSize)
 				{
 					auto* newBlock = reinterpret_cast<BlockHeader*>(alignedAddr + size);
 					newBlock->size = curr->size - offset - size;
