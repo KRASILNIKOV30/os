@@ -2,6 +2,7 @@
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
+#include <mutex>
 
 class MemoryManager
 {
@@ -23,6 +24,7 @@ public:
 
 	void* Allocate(const size_t size, const size_t align = alignof(std::max_align_t)) noexcept
 	{
+		std::lock_guard lock(m_mutex);
 		if (size == 0 || align == 0 || (align & (align - 1)) != 0)
 		{
 			return nullptr;
@@ -66,6 +68,7 @@ public:
 
 	void Free(void* addr) noexcept
 	{
+		std::lock_guard lock(m_mutex);
 		if (!addr)
 		{
 			return;
@@ -85,4 +88,5 @@ private:
 	};
 
 	BlockHeader* m_freeList = nullptr;
+	std::mutex m_mutex;
 };
