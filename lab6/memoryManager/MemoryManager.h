@@ -10,8 +10,8 @@ class MemoryManager
 public:
 	MemoryManager(void* start, size_t size)
 		: m_start(static_cast<uint8_t*>(start))
-		, m_size(size)
-		, m_freeList(nullptr)
+		  , m_size(size)
+		  , m_freeList(nullptr)
 	{
 		if (reinterpret_cast<std::uintptr_t>(m_start) % alignof(std::max_align_t) != 0)
 		{
@@ -26,7 +26,7 @@ public:
 	MemoryManager(const MemoryManager&) = delete;
 	MemoryManager& operator=(const MemoryManager&) = delete;
 
-	void* Allocate(size_t size, size_t align = alignof(std::max_align_t)) noexcept
+	void* Allocate(const size_t size, const size_t align = alignof(std::max_align_t)) noexcept
 	{
 		if (size == 0 || align == 0 || (align & (align - 1)) != 0)
 		{
@@ -38,29 +38,27 @@ public:
 
 		while (curr != nullptr)
 		{
-			uintptr_t addr = reinterpret_cast<uintptr_t>(curr) + sizeof(BlockHeader);
-			size_t alignedAddr = (addr + align - 1) & ~(align - 1);
+			constexpr auto headerSize = sizeof(BlockHeader);
+			const uintptr_t addr = reinterpret_cast<uintptr_t>(curr) + headerSize;
+			const size_t alignedAddr = (addr + align - 1) & ~(align - 1);
 
 			size_t totalSize = alignedAddr - reinterpret_cast<uintptr_t>(curr);
 
 			if (curr->size >= totalSize + size)
 			{
-				// Блок подходит, выделяем память
-
-				// Разделяем блок, если оставшееся пространство достаточно для нового блока
-				if (curr->size >= totalSize + size + sizeof(BlockHeader))
+				if (curr->size > totalSize + size + sizeof(BlockHeader))
 				{
-					BlockHeader* newBlock = reinterpret_cast<BlockHeader*>(alignedAddr + size);
+					auto* newBlock = reinterpret_cast<BlockHeader*>(alignedAddr + size);
 					newBlock->size = curr->size - totalSize - size;
 					newBlock->next = curr->next;
 
-					// Переносим указатель на новый свободный блок
 					curr->size = totalSize;
 					curr->next = newBlock;
 				}
 
-				// Удаляем блок из списка свободных
 				*prev = curr->next;
+				auto* allocatedBlock = reinterpret_cast<BlockHeader*>(alignedAddr - headerSize);
+				allocatedBlock->size = size + headerSize;
 				return reinterpret_cast<void*>(alignedAddr);
 			}
 
@@ -78,7 +76,7 @@ public:
 			return;
 		}
 
-		BlockHeader* block = reinterpret_cast<BlockHeader*>(reinterpret_cast<uintptr_t>(addr) - sizeof(BlockHeader));
+		auto* block = reinterpret_cast<BlockHeader*>(reinterpret_cast<uintptr_t>(addr) - sizeof(BlockHeader));
 
 		block->next = m_freeList;
 		m_freeList = block;
