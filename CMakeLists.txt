@@ -12,4 +12,6 @@ enable_testing()
 add_subdirectory(lab6)
 
 add_library(catch2 INTERFACE)
+add_library(timer INTERFACE)
 target_include_directories(catch2 INTERFACE lib/catch2/)
+target_include_directories(timer INTERFACE lib/timer/)

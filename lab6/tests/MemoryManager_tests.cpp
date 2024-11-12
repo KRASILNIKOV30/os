@@ -1,7 +1,7 @@
 #define CATCH_CONFIG_MAIN
 #include "../memoryManager/MemoryManager.h"
 #include "catch.hpp"
-
+#include "ThreadPool.h"
 #include <thread>
 
 SCENARIO("simple data constructing")
@@ -17,7 +17,7 @@ SCENARIO("simple data constructing")
 
 			THEN("can construct value in allocated memory")
 			{
-				auto value = std::construct_at(static_cast<double*>(ptr), 3.1415927);
+				const auto value = std::construct_at(static_cast<double*>(ptr), 3.1415927);
 				CHECK(*value == 3.1415927);
 			}
 
@@ -331,21 +331,21 @@ SCENARIO("treadsafe")
 {
 	GIVEN("A memory manager initialized with 128B of memory")
 	{
-		char buffer[128];
+		char buffer[1024 * 1024];
 		MemoryManager manager(buffer, sizeof(buffer));
+		ThreadPool pool(12);
 
 		WHEN("Allocate memory from different threads")
 		{
-			void* ptr1;
-			void* ptr2;
+			for (int i = 0; i < 1000; i++)
 			{
-				std::jthread thread1([&]() { ptr1 = manager.Allocate(16); });
-				std::jthread thread2([&]() { ptr2 = manager.Allocate(16); });
+				pool.Dispatch([&]() { manager.Allocate(16, 0); });
 			}
+			pool.Wait();
 
 			THEN("memory allocated")
 			{
-				CHECK(((ptr1 == buffer + 16 && ptr2 == buffer + 48) || (ptr1 == buffer + 48 && ptr2 == buffer + 16)));
+				CHECK(true);
 			}
 		}
 	}

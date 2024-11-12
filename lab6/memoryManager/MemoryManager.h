@@ -1,7 +1,6 @@
 #pragma once
 #include <cstddef>
 #include <cstdint>
-#include <iostream>
 #include <mutex>
 
 class MemoryManager
@@ -24,6 +23,9 @@ public:
 
 	void* Allocate(const size_t size, const size_t align = alignof(std::max_align_t)) noexcept
 	{
+		// не выравнивается, если align < 8
+		// добавить assert о выравнивании
+		// сделать склеивание
 		std::lock_guard lock(m_mutex);
 		if (size == 0 || align == 0 || (align & (align - 1)) != 0)
 		{
@@ -37,6 +39,7 @@ public:
 		{
 			constexpr auto headerSize = sizeof(BlockHeader);
 			const auto addr = reinterpret_cast<ptrdiff_t>(curr) + headerSize;
+			// std
 			const size_t alignedAddr = (addr + align - 1) & ~(align - 1);
 
 			const size_t offset = alignedAddr - reinterpret_cast<uintptr_t>(curr);

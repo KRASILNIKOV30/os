@@ -1,92 +1,88 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <atomic>
 #include <thread>
-#include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/stat.h>
+#include "FileDesc.h"
+#include "ThreadsafeVector.h"
+#include "Timer.h"
+#include "../tests/ThreadPool.h"
 
-void CountByteFrequencies(const unsigned char* start, const unsigned char* end, std::atomic<int>* result)
+using HistogramType = std::array<size_t, 256>;
+using Hists = ThreadsafeVector<HistogramType>;
+
+void CountByteFrequencies(const unsigned char* start, const unsigned char* end, Hists& result)
 {
+	HistogramType histogram;
 	for (const unsigned char* ptr = start; ptr < end; ++ptr)
 	{
-		++result[*ptr];
+		++histogram[*ptr];
+	}
+	result.PushBack(histogram);
+}
+
+void UnionHists(Hists const& histograms, HistogramType& result)
+{
+	for (const auto& hist : histograms)
+	{
+		for (int i = 0; i < 256; ++i)
+		{
+			result.at(i) += hist.at(i);
+		}
 	}
 }
 
-void Histogram(const char* filename, int num_threads)
+void CreateHistogram(HistogramType& result, unsigned char* mapPtr, const size_t fileSize, const int threadsNum)
 {
-	// Открываем файл
-	int fd = open(filename, O_RDONLY);
-	if (fd == -1)
+	Hists histograms;
 	{
-		std::cerr << "Error opening file " << filename << std::endl;
-		return;
+		const size_t chunkSize = fileSize / threadsNum;
+		std::vector<std::jthread> threads;
+
+		int i = 0;
+		for (; i < threadsNum; ++i)
+		{
+			const size_t start = i * chunkSize;
+			const size_t end = i == threadsNum - 1 ? fileSize : (i + 1) * chunkSize;
+
+			threads.emplace_back(CountByteFrequencies, mapPtr + start, mapPtr + end, std::ref(histograms));
+		}
 	}
 
-	// Получаем размер файла
-	struct stat file_info{};
-	if (fstat(fd, &file_info) == -1)
-	{
-		std::cerr << "Error getting file size" << std::endl;
-		close(fd);
-		return;
-	}
-	size_t file_size = file_info.st_size;
+	UnionHists(histograms, result);
+}
 
-	// Отображаем файл в память
-	unsigned char* mmap_ptr = (unsigned char*)mmap(nullptr, file_size, PROT_READ, MAP_PRIVATE, fd, 0);
-	if (mmap_ptr == MAP_FAILED)
-	{
-		std::cerr << "Error mapping file to memory" << std::endl;
-		close(fd);
-		return;
-	}
+void Histogram(std::string const& filename, const int threadsNum)
+{
+	const FileDesc file(open(filename.c_str(), O_RDONLY));
+	const auto fileSize = file.GetSize();
+	const auto mapPtr = file.MapFile();
 
-	// Массив для хранения частот встречаемости байтов (атомарный для потоков)
-	std::atomic<int> result[256] = { 0 };
+	HistogramType histogram{};
+	CreateHistogram(histogram, mapPtr, fileSize, threadsNum);
 
-	// Разделяем работу между потоками
-	size_t chunk_size = file_size / num_threads;
-	std::vector<std::jthread> threads;
-
-	for (int i = 0; i < num_threads; ++i)
-	{
-		size_t start = i * chunk_size;
-		size_t end = (i == num_threads - 1) ? file_size : (i + 1) * chunk_size;
-
-		// Используем std::jthread, который автоматически завершит поток
-		threads.emplace_back(CountByteFrequencies, mmap_ptr + start, mmap_ptr + end, result);
-	}
-
-	// Ожидаем завершения всех потоков (не нужно вручную вызывать join, это сделает jthread)
-	// std::jthread автоматически ожидает завершения.
-
-	// Выводим результаты
 	for (int i = 0; i < 256; ++i)
 	{
-		std::cout << result[i] << std::endl;
+		std::cout << histogram[i] << std::endl;
 	}
 
-	// Освобождаем память и закрываем файл
-	munmap(mmap_ptr, file_size);
-	close(fd);
+	file.UnmapFile(mapPtr);
 }
 
-int main(int argc, char* argv[])
+int main(const int argc, char* argv[])
 {
 	if (argc != 3)
 	{
-		std::cerr << "Usage: " << argv[0] << " FILE_NAME NUM_THREADS" << std::endl;
+		std::cout << "Usage: " << argv[0] << " FILE_NAME NUM_THREADS" << std::endl;
 		return 1;
 	}
 
-	const char* filename = argv[1];
-	int num_threads = std::stoi(argv[2]);
+	const std::string filename = argv[1];
+	const int threadsNum = std::stoi(argv[2]);
 
-	Histogram(filename, num_threads);
+	MeasureTime(std::cout, "histogram", Histogram, filename, threadsNum);
 
-	return 0;
+	return EXIT_SUCCESS;
 }
