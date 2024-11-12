@@ -3,6 +3,11 @@ set(CMAKE_CXX_STANDARD 20)
 add_executable(lab6-tests
         memoryManager/MemoryManager.h
         tests/MemoryManager_tests.cpp
+        histogram/Histogram.cpp
+)
+
+add_executable(histogram
+        histogram/Histogram.cpp
 )
 
 target_link_libraries(lab6-tests PUBLIC catch2)
