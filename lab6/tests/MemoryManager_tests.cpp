@@ -2,6 +2,8 @@
 #include "../memoryManager/MemoryManager.h"
 #include "catch.hpp"
 
+#include <thread>
+
 SCENARIO("simple data constructing")
 {
 	GIVEN("memory manager initialized with 1000 bytes")
@@ -320,6 +322,30 @@ SCENARIO("Memory manager correctly handles multiple allocations and frees", "[me
 
 				manager.Free(ptrAfterFree1);
 				manager.Free(ptrAfterFree2);
+			}
+		}
+	}
+}
+
+SCENARIO("treadsafe")
+{
+	GIVEN("A memory manager initialized with 128B of memory")
+	{
+		char buffer[128];
+		MemoryManager manager(buffer, sizeof(buffer));
+
+		WHEN("Allocate memory from different threads")
+		{
+			void* ptr1;
+			void* ptr2;
+			{
+				std::jthread thread1([&]() { ptr1 = manager.Allocate(16); });
+				std::jthread thread2([&]() { ptr2 = manager.Allocate(16); });
+			}
+
+			THEN("memory allocated")
+			{
+				CHECK(((ptr1 == buffer + 16 && ptr2 == buffer + 48) || (ptr1 == buffer + 48 && ptr2 == buffer + 16)));
 			}
 		}
 	}

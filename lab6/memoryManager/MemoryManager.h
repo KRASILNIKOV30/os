@@ -1,6 +1,4 @@
 #pragma once
-#include <algorithm>
-#include <cassert>
 #include <cstddef>
 #include <cstdint>
 #include <iostream>
@@ -9,16 +7,13 @@ class MemoryManager
 {
 public:
 	MemoryManager(void* start, size_t size)
-		: m_start(static_cast<uint8_t*>(start))
-		  , m_size(size)
-		  , m_freeList(nullptr)
 	{
-		if (reinterpret_cast<std::uintptr_t>(m_start) % alignof(std::max_align_t) != 0)
+		if (reinterpret_cast<std::uintptr_t>(start) % alignof(std::max_align_t) != 0)
 		{
 			throw std::invalid_argument("Start address must be aligned to std::max_align_t");
 		}
 
-		m_freeList = reinterpret_cast<BlockHeader*>(m_start);
+		m_freeList = static_cast<BlockHeader*>(start);
 		m_freeList->size = size;
 		m_freeList->next = nullptr;
 	}
@@ -85,11 +80,9 @@ public:
 private:
 	struct BlockHeader
 	{
-		size_t size; // Размер блока памяти
-		BlockHeader* next; // Указатель на следующий свободный блок
+		size_t size;
+		BlockHeader* next;
 	};
 
-	uint8_t* m_start; // Начало блока памяти
-	size_t m_size; // Размер блока памяти
-	BlockHeader* m_freeList; // Список свободных блоков
+	BlockHeader* m_freeList = nullptr;
 };
