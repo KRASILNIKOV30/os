@@ -13,9 +13,9 @@ class ThreadPool
 public:
 	using Task = std::function<void()>;
 
-	explicit ThreadPool(unsigned numThreads)
+	explicit ThreadPool(unsigned threadsNum)
 	{
-		for (unsigned i = 0; i < numThreads; ++i)
+		for (unsigned i = 0; i < threadsNum; ++i)
 		{
 			m_workers.emplace_back([this](std::stop_token stopToken) {
 				WorkerThread(stopToken);

@@ -1,3 +1,4 @@
+#pragma once
 #include <atomic>
 #include <condition_variable>
 #include <exception>
@@ -13,11 +14,11 @@ class ThreadPool
 public:
 	using Task = std::function<void()>;
 
-	explicit ThreadPool(unsigned numThreads)
+	explicit ThreadPool(const unsigned threadsNum)
 	{
-		for (unsigned i = 0; i < numThreads; ++i)
+		for (unsigned i = 0; i < threadsNum; ++i)
 		{
-			m_workers.emplace_back([this](std::stop_token stopToken) {
+			m_workers.emplace_back([this](const std::stop_token& stopToken) {
 				WorkerThread(stopToken);
 			});
 		}
@@ -34,40 +35,37 @@ public:
 	void Dispatch(Task task)
 	{
 		{
-			std::lock_guard<std::mutex> lock(m_queueMutex);
+			std::lock_guard lock(m_queueMutex);
 			if (m_stopFlag)
 			{
 				return;
 			}
 			m_tasks.push(std::move(task));
 		}
-		m_condition.notify_one();
+		m_condVar.notify_one();
 	}
 
 	void Wait()
 	{
-		std::unique_lock<std::mutex> lock(m_queueMutex);
-		m_condition.wait(lock, [this]() { return m_tasks.empty() && m_activeTasks == 0; });
+		std::unique_lock lock(m_queueMutex);
+		m_condVar.wait(lock, [this]() { return m_tasks.empty() && m_activeTasks == 0; });
 	}
 
 	void Stop()
 	{
-		{
-			std::lock_guard<std::mutex> lock(m_queueMutex);
-			m_stopFlag = true;
-		}
-		m_condition.notify_all();
+		m_stopFlag = true;
+		m_condVar.notify_all();
 	}
 
 private:
-	void WorkerThread(std::stop_token stopToken)
+	void WorkerThread(const std::stop_token& stopToken)
 	{
 		while (!stopToken.stop_requested())
 		{
 			Task task;
 			{
-				std::unique_lock<std::mutex> lock(m_queueMutex);
-				m_condition.wait(lock, [this]() { return m_stopFlag || !m_tasks.empty(); });
+				std::unique_lock lock(m_queueMutex);
+				m_condVar.wait(lock, [this]() { return m_stopFlag || !m_tasks.empty(); });
 
 				if (m_stopFlag && m_tasks.empty())
 				{
@@ -91,14 +89,14 @@ private:
 			m_activeTasks.fetch_sub(1);
 			if (m_tasks.empty() && m_activeTasks == 0)
 			{
-				m_condition.notify_all();
+				m_condVar.notify_all();
 			}
 		}
 	}
 
 	std::queue<Task> m_tasks;
 	std::mutex m_queueMutex;
-	std::condition_variable m_condition;
+	std::condition_variable m_condVar;
 	std::atomic<bool> m_stopFlag;
 	std::atomic<int> m_activeTasks = 0;
 	std::vector<std::jthread> m_workers;
