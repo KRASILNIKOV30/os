@@ -17,7 +17,7 @@ public:
 	{
 		for (unsigned i = 0; i < threadsNum; ++i)
 		{
-			m_workers.emplace_back([this](std::stop_token stopToken) {
+			m_workers.emplace_back([this](const std::stop_token& stopToken) {
 				WorkerThread(stopToken);
 			});
 		}

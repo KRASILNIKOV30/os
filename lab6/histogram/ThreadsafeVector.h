@@ -13,12 +13,12 @@ public:
 		m_vector.push_back(value);
 	}
 
-	std::vector<T>::const_iterator begin() const
+	typename std::vector<T>::const_iterator begin() const
 	{
 		return m_vector.cbegin();
 	}
 
-	std::vector<T>::const_iterator end() const
+	typename std::vector<T>::const_iterator end() const
 	{
 		return m_vector.cend();
 	}

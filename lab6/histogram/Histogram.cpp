@@ -8,7 +8,6 @@
 #include "FileDesc.h"
 #include "ThreadsafeVector.h"
 #include "Timer.h"
-#include "../tests/ThreadPool.h"
 
 using HistogramType = std::array<size_t, 256>;
 using Hists = ThreadsafeVector<HistogramType>;
