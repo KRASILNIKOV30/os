@@ -9,11 +9,18 @@ add_executable(lab6-tests
 add_executable(histogram
         histogram/Histogram.cpp
         histogram/FileDesc.h
-        histogram/ISet.h
-        histogram/TreadsafeSet.h
         histogram/ThreadsafeVector.h
+)
+
+add_executable(search-server-tests
+        searchServer/Path.h
+        searchServer/Document.h
+        searchServer/InvertedIndex.h
+        tests/InversedIndex_tests.cpp
 )
 
 target_link_libraries(lab6-tests PUBLIC catch2)
 target_link_libraries(histogram PUBLIC timer)
+target_link_libraries(search-server-tests PUBLIC catch2)
 add_test(NAME lab6-tests COMMAND lab6-tests)
+add_test(NAME search-server-tests COMMAND search-server-tests)
