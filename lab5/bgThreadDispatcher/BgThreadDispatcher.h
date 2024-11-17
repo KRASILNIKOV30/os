@@ -15,7 +15,7 @@ public:
 
 	BgThreadDispatcher()
 	{
-		m_workerThread = std::jthread([this](std::stop_token stopToken) {
+		m_workerThread = std::jthread([this](const std::stop_token& stopToken) {
 			WorkerThread(stopToken);
 		});
 	}
@@ -30,28 +30,30 @@ public:
 
 	void Dispatch(Task task)
 	{
-		std::lock_guard<std::mutex> lock(m_queueMutex);
 		if (m_stopFlag)
 		{
 			return;
 		}
-		m_tasks.push(std::move(task));
-		m_condition.notify_one();
+		{
+			std::lock_guard lock(m_queueMutex);
+			m_tasks.push(std::move(task));
+		}
+		// убрать лок (исправлено)
+		m_condVar.notify_one();
 	}
 
 	void Wait()
 	{
-		std::unique_lock<std::mutex> lock(m_queueMutex);
-		m_condition.wait(lock, [this]() { return m_tasks.empty() && !m_isWorking; });
+		std::unique_lock lock(m_queueMutex);
+		// Написать тест: два потока делают wait,
+		m_condVar.wait(lock, [this]() { return m_tasks.empty() && !m_isWorking; });
 	}
 
 	void Stop()
 	{
-		{
-			std::lock_guard<std::mutex> lock(m_queueMutex);
-			m_stopFlag = true;
-		}
-		m_condition.notify_one(); // уведомляем рабочий поток о завершении работы
+		// ЛОк не нужен (Исправлено)
+		m_stopFlag = true;
+		m_condVar.notify_one();
 	}
 
 private:
@@ -61,8 +63,8 @@ private:
 		{
 			Task task;
 			{
-				std::unique_lock<std::mutex> lock(m_queueMutex);
-				m_condition.wait(lock, [this]() { return m_stopFlag || !m_tasks.empty(); });
+				std::unique_lock lock(m_queueMutex);
+				m_condVar.wait(lock, [this]() { return m_stopFlag || !m_tasks.empty(); });
 
 				if (m_stopFlag && m_tasks.empty())
 				{
@@ -86,14 +88,15 @@ private:
 			m_isWorking = false;
 			if (m_tasks.empty())
 			{
-				m_condition.notify_all();
+				m_condVar.notify_all();
 			}
 		}
 	}
 
 	std::queue<Task> m_tasks;
 	std::mutex m_queueMutex;
-	std::condition_variable m_condition;
+	// переименовать (Исправлено)
+	std::condition_variable m_condVar;
 	std::atomic<bool> m_stopFlag = false;
 	std::atomic<bool> m_isWorking = false;
 	std::jthread m_workerThread;

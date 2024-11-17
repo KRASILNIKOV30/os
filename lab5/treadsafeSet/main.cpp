@@ -1,5 +1,5 @@
 #include "TreadsafeSet.h"
-#include "../../timer/Timer.h"
+#include "Timer.h"
 #include <iostream>
 #include <cmath>
 #include <optional>

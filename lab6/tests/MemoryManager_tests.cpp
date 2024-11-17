@@ -1,6 +1,8 @@
 #define CATCH_CONFIG_MAIN
 #include "../memoryManager/MemoryManager.h"
 #include "catch.hpp"
+#include "ThreadPool.h"
+#include <thread>
 
 SCENARIO("simple data constructing")
 {
@@ -15,7 +17,7 @@ SCENARIO("simple data constructing")
 
 			THEN("can construct value in allocated memory")
 			{
-				auto value = std::construct_at(static_cast<double*>(ptr), 3.1415927);
+				const auto value = std::construct_at(static_cast<double*>(ptr), 3.1415927);
 				CHECK(*value == 3.1415927);
 			}
 
@@ -24,7 +26,131 @@ SCENARIO("simple data constructing")
 	}
 }
 
-SCENARIO("Allocate and free memory blocks", "[memory]")
+TEST_CASE("initializing with not aligned memory")
+{
+	alignas(sizeof(std::max_align_t)) uint8_t buffer[32];
+	CHECK_THROWS_AS(MemoryManager(buffer + 1, sizeof(buffer)), std::invalid_argument);
+}
+
+SCENARIO("multiple blocks allocating")
+{
+	GIVEN("memory manager initialized with 128 bytes")
+	{
+		alignas(sizeof(max_align_t)) uint8_t buffer[96];
+		auto const start = static_cast<uint8_t*>(buffer);
+		MemoryManager memoryManager(buffer, sizeof(buffer));
+
+		WHEN("allocate memory")
+		{
+			auto ptr1 = memoryManager.Allocate(16);
+
+			THEN("memory allocated in the start of block after block header")
+			{
+				CHECK(ptr1 == start + 16);
+			}
+
+			AND_WHEN("allocate more blocks")
+			{
+				auto ptr2 = memoryManager.Allocate(16);
+				auto ptr3 = memoryManager.Allocate(16);
+
+				THEN("blocks allocated")
+				{
+					CHECK(ptr2 == start + 48);
+					CHECK(ptr3 == start + 80);
+
+					AND_THEN("all memory was allocated")
+					{
+						const auto ptr4 = memoryManager.Allocate(1);
+						CHECK(ptr4 == nullptr);
+					}
+
+					WHEN("free the first block")
+					{
+						memoryManager.Free(ptr1);
+						ptr1 = nullptr;
+
+						THEN("can allocate it again")
+						{
+							ptr1 = memoryManager.Allocate(16);
+							CHECK(ptr1 == start + 16);
+						}
+					}
+
+					WHEN("free the second block")
+					{
+						memoryManager.Free(ptr2);
+						ptr2 = nullptr;
+
+						THEN("can allocate it again")
+						{
+							ptr2 = memoryManager.Allocate(16);
+							CHECK(ptr2 == start + 48);
+						}
+					}
+
+					WHEN("free the third block")
+					{
+						memoryManager.Free(ptr3);
+						ptr3 = nullptr;
+
+						THEN("can allocate it again")
+						{
+							ptr3 = memoryManager.Allocate(16);
+							CHECK(ptr3 == start + 80);
+						}
+					}
+				}
+
+				memoryManager.Free(ptr2);
+				memoryManager.Free(ptr3);
+			}
+
+			memoryManager.Free(ptr1);
+		}
+
+		WHEN("allocate memory with unaligned size")
+		{
+			const auto ptr1 = memoryManager.Allocate(17);
+
+			WHEN("allocate memory")
+			{
+				const auto ptr2 = memoryManager.Allocate(16);
+
+				THEN("manager aligned memory")
+				{
+					CHECK(ptr1 == start + 16);
+					CHECK(ptr2 == start + 64);
+				}
+
+				AND_THEN("can not allocate more memory")
+				{
+					const auto ptr3 = memoryManager.Allocate(1);
+					CHECK(ptr3 == nullptr);
+				}
+
+				memoryManager.Free(ptr2);
+			}
+
+			WHEN("allocate with custom alignment")
+			{
+				const auto ptr2 = memoryManager.Allocate(16, 8);
+
+				THEN("memory allocated")
+				{
+					CHECK(ptr2 == start + 56);
+				}
+
+				memoryManager.Free(ptr2);
+			}
+
+			memoryManager.Free(ptr1);
+		}
+
+	}
+}
+
+SCENARIO("Allocate and free memory blocks")
 {
 	GIVEN("A memory manager initialized with 1MB of memory")
 	{
@@ -82,7 +208,7 @@ SCENARIO("Allocate and free memory blocks", "[memory]")
 
 			THEN("The memory should be freed and available for reuse")
 			{
-				REQUIRE(ptr != ptrAfterFree); // Ensures that memory was reused correctly
+				REQUIRE(ptr == ptrAfterFree); // Ensures that memory was reused correctly
 				REQUIRE(ptrAfterFree != nullptr);
 			}
 		}
@@ -196,6 +322,51 @@ SCENARIO("Memory manager correctly handles multiple allocations and frees", "[me
 
 				manager.Free(ptrAfterFree1);
 				manager.Free(ptrAfterFree2);
+			}
+		}
+	}
+}
+
+SCENARIO("treadsafe")
+{
+	GIVEN("A memory manager initialized with 128B of memory")
+	{
+		char buffer[1024 * 1024];
+		MemoryManager manager(buffer, sizeof(buffer));
+		ThreadPool pool(12);
+
+		WHEN("Allocate memory from different threads")
+		{
+			for (int i = 0; i < 1000; i++)
+			{
+				pool.Dispatch([&]() { manager.Allocate(16, 0); });
+			}
+			pool.Wait();
+
+			THEN("memory allocated")
+			{
+				CHECK(true);
+			}
+		}
+	}
+}
+
+SCENARIO("multiple freed blocks")
+{
+	GIVEN("A memory manager initialized with 128B of memory")
+	{
+		char buffer[128];
+		MemoryManager manager(buffer, sizeof(buffer));
+
+		WHEN("allocate and free some memory")
+		{
+			auto const ptr1 = manager.Allocate(16);
+			manager.Free(ptr1);
+
+			THEN("can allocate larger block of memory")
+			{
+				auto const ptr2 = manager.Allocate(17);
+				CHECK(ptr2 == buffer + 48);
 			}
 		}
 	}

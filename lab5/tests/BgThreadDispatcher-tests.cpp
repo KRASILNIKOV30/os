@@ -37,6 +37,7 @@ TEST_CASE("Test BgThreadDispatcher with exception handling")
 {
 	BgThreadDispatcher dispatcher;
 
+	// переименовать
 	bool exceptionCaught = false;
 
 	dispatcher.Dispatch([&]() {
