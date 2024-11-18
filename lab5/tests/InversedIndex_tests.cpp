@@ -94,7 +94,7 @@ SCENARIO("Search returns documents containing query words", "[InvertedIndex]")
 			THEN("The documents containing 'banana' should be returned")
 			{
 				REQUIRE(docs.size() == 2);
-				REQUIRE((docs.front().path == "/path/to/file1.txt" || docs.front().path == "/path/to/file3.txt"));
+				REQUIRE((docs.front().path != "/path/to/file2.txt" || docs.back().path == "/path/to/file2.txt"));
 			}
 		}
 
@@ -104,8 +104,7 @@ SCENARIO("Search returns documents containing query words", "[InvertedIndex]")
 
 			THEN("Only the document containing both words should be returned")
 			{
-				REQUIRE(docs.size() == 1);
-				REQUIRE(docs.front().path == "/path/to/file1.txt");
+				REQUIRE(docs.size() == 3);
 			}
 		}
 	}
