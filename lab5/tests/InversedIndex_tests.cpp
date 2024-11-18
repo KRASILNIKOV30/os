@@ -1,4 +1,3 @@
-#define CATCH_CONFIG_MAIN
 #include "../searchServer/InvertedIndex.h"
 #include "catch.hpp"
 

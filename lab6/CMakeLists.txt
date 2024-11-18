@@ -12,12 +12,7 @@ add_executable(histogram
         histogram/ThreadsafeVector.h
 )
 
-add_executable(search-server-tests
-        searchServer/Path.h
-        searchServer/Document.h
-        searchServer/InvertedIndex.h
-        tests/InversedIndex_tests.cpp
-)
+
 
 target_link_libraries(lab6-tests PUBLIC catch2)
 target_link_libraries(histogram PUBLIC timer)
