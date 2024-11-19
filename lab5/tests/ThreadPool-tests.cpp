@@ -1,7 +1,6 @@
 #include "../threadPool/ThreadPool.h"
 #include <catch.hpp>
 #include <chrono>
-#include <iostream>
 #include <memory>
 
 TEST_CASE("dispatch and execute")
