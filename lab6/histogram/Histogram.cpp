@@ -9,7 +9,9 @@
 #include "ThreadsafeVector.h"
 #include "Timer.h"
 
-using HistogramType = std::array<size_t, 256>;
+constexpr int CHARS_NUMBER = 256;
+
+using HistogramType = std::array<size_t, CHARS_NUMBER>;
 using Hists = ThreadsafeVector<HistogramType>;
 
 void CountByteFrequencies(const unsigned char* start, const unsigned char* end, Hists& result)
@@ -26,7 +28,7 @@ void UnionHists(Hists const& histograms, HistogramType& result)
 {
 	for (const auto& hist : histograms)
 	{
-		for (int i = 0; i < 256; ++i)
+		for (int i = 0; i < CHARS_NUMBER; ++i)
 		{
 			result.at(i) += hist.at(i);
 		}
@@ -62,7 +64,7 @@ void Histogram(std::string const& filename, const int threadsNum)
 	HistogramType histogram{};
 	CreateHistogram(histogram, mapPtr, fileSize, threadsNum);
 
-	for (int i = 0; i < 256; ++i)
+	for (int i = 0; i < CHARS_NUMBER; ++i)
 	{
 		std::cout << histogram[i] << std::endl;
 	}

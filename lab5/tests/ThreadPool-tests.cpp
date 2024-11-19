@@ -25,6 +25,7 @@ TEST_CASE("stop before dispatch")
 
 	bool taskExecuted = false;
 	pool.Dispatch([&]() { taskExecuted = true; });
+	pool.Wait();
 
 	REQUIRE(taskExecuted == false);
 }
