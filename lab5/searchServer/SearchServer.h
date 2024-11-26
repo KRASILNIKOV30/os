@@ -60,8 +60,8 @@ public:
 
 		for (int i = 0; i < result.size() && i < RESULT_MAX_SIZE; i++)
 		{
-			const auto doc = result[i];
-			std::cout << "id: " << doc.id << ", relevance: " << doc.relevance << ", path: " << doc.path << std::endl;
+			const auto& [id, relevance, path] = result[i];
+			std::cout << "id: " << id << ", relevance: " << relevance << ", path: " << path << std::endl;
 		}
 	}
 

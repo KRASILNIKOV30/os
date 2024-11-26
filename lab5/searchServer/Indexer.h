@@ -42,7 +42,7 @@ public:
 	{
 		for (const auto& entry : fs::recursive_directory_iterator(dirPath))
 		{
-			if (fs::is_regular_file(entry))
+			if (is_regular_file(entry))
 			{
 				AddFile(entry.path());
 			}
@@ -53,7 +53,7 @@ public:
 	{
 		for (const auto& entry : fs::directory_iterator(dirPath))
 		{
-			if (fs::is_regular_file(entry))
+			if (is_regular_file(entry))
 			{
 				AddFile(entry.path());
 			}
