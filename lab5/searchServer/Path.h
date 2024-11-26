@@ -1,4 +1,5 @@
 #pragma once
 #include <filesystem>
 
-using Path = std::filesystem::path;
+namespace fs = std::filesystem;
+using Path = fs::path;

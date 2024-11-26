@@ -14,5 +14,7 @@ add_subdirectory(lab6)
 
 add_library(catch2 INTERFACE)
 add_library(timer INTERFACE)
+add_library(coutBuffer INTERFACE)
 target_include_directories(catch2 INTERFACE lib/catch2/)
 target_include_directories(timer INTERFACE lib/timer/)
+target_include_directories(coutBuffer INTERFACE lib/coutBuffer/)

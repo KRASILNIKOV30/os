@@ -12,8 +12,6 @@ add_executable(histogram
         histogram/ThreadsafeVector.h
 )
 
-
-
 target_link_libraries(lab6-tests PUBLIC catch2)
 target_link_libraries(histogram PUBLIC timer)
 target_link_libraries(search-server-tests PUBLIC catch2)

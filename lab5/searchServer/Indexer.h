@@ -1,29 +1,35 @@
-#include <boost/asio.hpp>
+#pragma once
+#include "../threadPool/ThreadPool.h"
+#include "InvertedIndex.h"
+#include "StrToLower.h"
 #include <filesystem>
+#include <fstream>
 #include <future>
 #include <iostream>
 #include <thread>
-#include "InvertedIndex.h"
-#include "ThreadPool.h"
 
 class Indexer
 {
 public:
 	Indexer(InvertedIndex& idx, size_t num_threads = std::thread::hardware_concurrency())
-		: index(idx)
-		, pool(num_threads)
+		: m_index(idx)
+		, m_pool(num_threads)
 	{
 	}
 
-	void addFile(Path const& file_path)
+	void AddFile(Path const& path)
 	{
-
-		boost::asio::post(pool, [this, file_path]() {
-			std::unordered_set<std::string> words = ExtractWords(file_path);
+		if (m_indexedFiles.contains(path))
+		{
+			return;
+		}
+		m_indexedFiles.insert(path);
+		m_pool.Dispatch([&, path]() {
+			auto [words, wordCount] = ExtractWords(path);
 			try
 			{
-				index.add_document(file_path.string(), words);
-				std::cout << "Indexed file: " << file_path << std::endl;
+				m_index.AddDocument(path, words, wordCount);
+				std::cout << "Indexed file: " << path << std::endl;
 			}
 			catch (const std::exception& e)
 			{
@@ -32,36 +38,92 @@ public:
 		});
 	}
 
-	void AddDirRecursive(const fs::path& dir_path)
+	void AddDirRecursive(const fs::path& dirPath)
 	{
-		for (const auto& entry : fs::recursive_directory_iterator(dir_path))
+		for (const auto& entry : fs::recursive_directory_iterator(dirPath))
 		{
 			if (fs::is_regular_file(entry))
 			{
-				addFile(entry.path());
+				AddFile(entry.path());
 			}
 		}
 	}
 
-	void wait_for_completion()
+	void AddDir(const fs::path& dirPath)
 	{
-		pool.join();
+		for (const auto& entry : fs::directory_iterator(dirPath))
+		{
+			if (fs::is_regular_file(entry))
+			{
+				AddFile(entry.path());
+			}
+		}
+	}
+
+	void RemoveFile(const fs::path& path)
+	{
+		if (!m_indexedFiles.contains(path))
+		{
+			return;
+		}
+		m_indexedFiles.erase(path);
+		m_pool.Dispatch([&, path]() {
+			try
+			{
+				m_index.RemoveDocument(path);
+				std::cout << "Removed file: " << path << std::endl;
+			}
+			catch (const std::exception& e)
+			{
+				std::cerr << e.what() << std::endl;
+			}
+		});
+	}
+
+	void RemoveDirRecursive(const fs::path& dirPath)
+	{
+		for (const auto& entry : fs::recursive_directory_iterator(dirPath))
+		{
+			if (fs::is_regular_file(entry))
+			{
+				RemoveFile(entry.path());
+			}
+		}
+	}
+
+	void RemoveDir(const fs::path& dirPath)
+	{
+		for (const auto& entry : fs::directory_iterator(dirPath))
+		{
+			if (fs::is_regular_file(entry))
+			{
+				RemoveFile(entry.path());
+			}
+		}
+	}
+
+	void Wait()
+	{
+		m_pool.Wait();
 	}
 
 private:
-	std::unordered_set<std::string> ExtractWords(const fs::path& file_path)
+	static std::pair<Words, size_t> ExtractWords(const fs::path& path)
 	{
-		std::unordered_set<std::string> words;
-		std::ifstream file(file_path);
+		Words words;
+		size_t wordCount = 0;
+		std::ifstream file(path);
 		std::string word;
 		while (file >> word)
 		{
-			words.insert(word);
+			++wordCount;
+			++words[StrToLower(word)];
 		}
-		return words;
+		return { words, wordCount };
 	}
 
 private:
-	InvertedIndex& index;
-	ThreadPool pool;
+	InvertedIndex& m_index;
+	std::unordered_set<Path> m_indexedFiles;
+	ThreadPool m_pool;
 };

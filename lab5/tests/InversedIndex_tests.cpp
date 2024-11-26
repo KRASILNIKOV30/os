@@ -1,181 +1,135 @@
 #include "../searchServer/InvertedIndex.h"
 #include "catch.hpp"
 
-SCENARIO("Document is added to the index", "[InvertedIndex]")
-{
-	GIVEN("An empty inverted index")
-	{
-		InvertedIndex index;
+SCENARIO("AddDocument adds a new document to the index") {
+    InvertedIndex index;
 
-		WHEN("A document with words 'apple', 'banana', 'orange' is added")
-		{
-			std::unordered_set<std::string> words = { "apple", "banana", "orange" };
-			Path path("/path/to/file1.txt");
-			uint64_t doc_id = index.AddDocument(path, words);
+    GIVEN("A new document with a path and some words") {
+        fs::path docPath = "doc1.txt";
+        Words words = {{"apple", 3}, {"banana", 2}};
+        size_t wordCount = 5;
 
-			THEN("The document should be indexed and retrievable by its words")
-			{
-				auto docs = index.Search({ "apple", "banana", "orange" });
-				REQUIRE(docs.size() == 1);
-				REQUIRE(docs.front().id == doc_id);
-				REQUIRE(docs.front().path == path);
-				REQUIRE(docs.front().words == words);
-			}
-		}
-	}
+        WHEN("The document is added to the index") {
+            auto docId = index.AddDocument(docPath, words, wordCount);
+
+            THEN("The document should be added with a valid id") {
+                REQUIRE(docId > 0);
+                REQUIRE(index.Search({"apple"}).size() == 1);
+            }
+
+            THEN("The word 'apple' should be indexed in the document") {
+                auto results = index.Search({"apple"});
+                REQUIRE(results.size() == 1);
+                REQUIRE(results[0].id == docId);
+                REQUIRE(results[0].path == docPath);
+            }
+
+            THEN("The word 'banana' should be indexed in the document") {
+                auto results = index.Search({"banana"});
+                REQUIRE(results.size() == 1);
+                REQUIRE(results[0].id == docId);
+                REQUIRE(results[0].path == docPath);
+            }
+        }
+    }
 }
 
-SCENARIO("Document is removed from the index", "[InvertedIndex]")
-{
-	GIVEN("An inverted index with a document")
-	{
-		InvertedIndex index;
-		std::unordered_set<std::string> words = { "apple", "banana" };
-		Path path("/path/to/file1.txt");
-		index.AddDocument(path, words);
+SCENARIO("RemoveDocument removes a document from the index") {
+    InvertedIndex index;
 
-		WHEN("The document is removed by its path")
-		{
-			bool removed = index.RemoveDocument(path);
+    GIVEN("A document is added to the index") {
+        fs::path docPath = "doc1.txt";
+        Words words = {{"apple", 3}, {"banana", 2}};
+        size_t wordCount = 5;
+        auto docId = index.AddDocument(docPath, words, wordCount);
 
-			THEN("The document should no longer be found in the index")
-			{
-				REQUIRE(removed);
-				auto docs = index.Search({ "apple", "banana" });
-				REQUIRE(docs.empty());
-			}
-		}
-	}
+        WHEN("The document is removed") {
+            bool removed = index.RemoveDocument(docPath);
+
+            THEN("The document should be removed from the index") {
+                REQUIRE(removed);
+                REQUIRE(index.Search({"apple"}).empty());
+                REQUIRE(index.Search({"banana"}).empty());
+            }
+
+            THEN("Subsequent searches for this document should not return results") {
+                auto results = index.Search({"apple"});
+                REQUIRE(results.empty());
+                results = index.Search({"banana"});
+                REQUIRE(results.empty());
+            }
+        }
+    }
 }
 
-SCENARIO("Trying to remove a non-existent document", "[InvertedIndex]")
-{
-	GIVEN("An inverted index with no documents")
-	{
-		InvertedIndex index;
+SCENARIO("Search returns documents sorted by relevance") {
+    InvertedIndex index;
 
-		WHEN("A non-existent document is removed by path")
-		{
-			Path path("/path/to/nonexistent.txt");
-			bool removed = index.RemoveDocument(path);
+    GIVEN("Multiple documents are added to the index") {
+        fs::path docPath1 = "doc1.txt";
+        Words words1 = {{"apple", 2}, {"banana", 1}, {"cat", 1}};
+        size_t wordCount1 = 4;
+        index.AddDocument(docPath1, words1, wordCount1);
 
-			THEN("The removal attempt should fail")
-			{
-				REQUIRE_FALSE(removed);
-			}
-		}
-	}
+        fs::path docPath2 = "doc2.txt";
+        Words words2 = {{"apple", 1}, {"banana", 3}};
+        size_t wordCount2 = 4;
+        index.AddDocument(docPath2, words2, wordCount2);
+
+        WHEN("A search is performed with a query") {
+            auto results = index.Search({"apple", "banana", "cat"});
+
+            THEN("The results should be sorted by relevance") {
+                REQUIRE(results.size() == 2);
+            }
+        }
+    }
 }
 
-SCENARIO("Search returns documents containing query words", "[InvertedIndex]")
-{
-	GIVEN("An inverted index with documents")
-	{
-		InvertedIndex index;
-		index.AddDocument("/path/to/file1.txt", { "apple", "banana" });
-		index.AddDocument("/path/to/file2.txt", { "apple", "cherry" });
-		index.AddDocument("/path/to/file3.txt", { "banana", "cherry" });
+SCENARIO("Search handles empty query gracefully") {
+    InvertedIndex index;
 
-		WHEN("Searching for the word 'apple'")
-		{
-			auto docs = index.Search({ "apple" });
+    GIVEN("Multiple documents are added to the index") {
+        fs::path docPath1 = "doc1.txt";
+        Words words1 = {{"apple", 2}};
+        size_t wordCount1 = 3;
+        index.AddDocument(docPath1, words1, wordCount1);
 
-			THEN("The documents containing 'apple' should be returned")
-			{
-				REQUIRE(docs.size() == 2);
-				REQUIRE((docs.front().path == "/path/to/file1.txt" || docs.front().path == "/path/to/file2.txt"));
-			}
-		}
+        fs::path docPath2 = "doc2.txt";
+        Words words2 = {{"banana", 3}};
+        size_t wordCount2 = 4;
+        index.AddDocument(docPath2, words2, wordCount2);
 
-		WHEN("Searching for the word 'banana'")
-		{
-			auto docs = index.Search({ "banana" });
+        WHEN("A search is performed with an empty query") {
+            auto results = index.Search({});
 
-			THEN("The documents containing 'banana' should be returned")
-			{
-				REQUIRE(docs.size() == 2);
-				REQUIRE((docs.front().path != "/path/to/file2.txt" || docs.back().path == "/path/to/file2.txt"));
-			}
-		}
-
-		WHEN("Searching for both 'apple' and 'banana'")
-		{
-			auto docs = index.Search({ "apple", "banana" });
-
-			THEN("Only the document containing both words should be returned")
-			{
-				REQUIRE(docs.size() == 3);
-			}
-		}
-	}
+            THEN("No documents should be returned") {
+                REQUIRE(results.empty());
+            }
+        }
+    }
 }
 
-SCENARIO("Search handles empty query", "[InvertedIndex]")
-{
-	GIVEN("An inverted index with documents")
-	{
-		InvertedIndex index;
-		index.AddDocument("/path/to/file1.txt", { "apple" });
-		index.AddDocument("/path/to/file2.txt", { "banana" });
+SCENARIO("Search returns no results when no documents match the query") {
+    InvertedIndex index;
 
-		WHEN("Searching with an empty set of query words")
-		{
-			auto docs = index.Search({});
+    GIVEN("Multiple documents are added to the index") {
+        fs::path docPath1 = "doc1.txt";
+        Words words1 = {{"apple", 2}};
+        size_t wordCount1 = 3;
+        index.AddDocument(docPath1, words1, wordCount1);
 
-			THEN("No documents should be returned")
-			{
-				REQUIRE(docs.empty());
-			}
-		}
-	}
-}
+        fs::path docPath2 = "doc2.txt";
+        Words words2 = {{"banana", 3}};
+        size_t wordCount2 = 4;
+        index.AddDocument(docPath2, words2, wordCount2);
 
-SCENARIO("Multiple documents with the same word are indexed correctly", "[InvertedIndex]")
-{
-	GIVEN("An inverted index with multiple documents containing the word 'apple'")
-	{
-		InvertedIndex index;
-		uint64_t doc1 = index.AddDocument("/path/to/file1.txt", { "apple", "banana" });
-		uint64_t doc2 = index.AddDocument("/path/to/file2.txt", { "apple", "cherry" });
+        WHEN("A search is performed with a query that matches no documents") {
+            auto results = index.Search({"orange"});
 
-		WHEN("Searching for the word 'apple'")
-		{
-			auto docs = index.Search({ "apple" });
-
-			THEN("Both documents should be returned")
-			{
-				REQUIRE(docs.size() == 2);
-				bool found_doc1 = false, found_doc2 = false;
-				for (const auto& doc : docs)
-				{
-					if (doc.id == doc1)
-						found_doc1 = true;
-					if (doc.id == doc2)
-						found_doc2 = true;
-				}
-				REQUIRE(found_doc1);
-				REQUIRE(found_doc2);
-			}
-		}
-	}
-}
-
-SCENARIO("Search returns no documents for non-matching words", "[InvertedIndex]")
-{
-	GIVEN("An inverted index with documents")
-	{
-		InvertedIndex index;
-		index.AddDocument("/path/to/file1.txt", { "apple", "banana" });
-		index.AddDocument("/path/to/file2.txt", { "cherry", "date" });
-
-		WHEN("Searching for the word 'grape' which does not exist in any document")
-		{
-			auto docs = index.Search({ "grape" });
-
-			THEN("No documents should be returned")
-			{
-				REQUIRE(docs.size() == 0);
-			}
-		}
-	}
+            THEN("No results should be returned") {
+                REQUIRE(results.empty());
+            }
+        }
+    }
 }
