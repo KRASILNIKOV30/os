@@ -73,7 +73,8 @@ int main(const int argc, char* argv[])
 		dirPath = argv[1];
 	}
 
-	try {
+	try
+	{
 		if (exists(dirPath) && is_directory(dirPath))
 		{
 			std::cout << dirPath.filename().string() << std::endl;
