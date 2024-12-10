@@ -12,6 +12,7 @@ enable_testing()
 add_subdirectory(lab5)
 add_subdirectory(lab6)
 add_subdirectory(lab7)
+add_subdirectory(lab8)
 
 add_library(catch2 INTERFACE)
 add_library(timer INTERFACE)

@@ -15,8 +15,8 @@ public:
 	{
 	}
 
-	Timer(const Timer&) = delete;
-	Timer& operator=(const Timer&) = delete;
+	Timer(const Clock&) = delete;
+	Clock& operator=(const Clock&) = delete;
 
 	void Stop()
 	{
