@@ -49,6 +49,7 @@ void InitSnowflakes(Snowflakes& snowflakes, const int width, int const height)
 
 void UpdateSnowflakes(Snowflakes& snowflakes, const int width, int const height, const double deltaTime)
 {
+	// добавить движения по горизонтали
 	for (auto& flake : snowflakes)
 	{
 		flake.y += flake.speed * deltaTime;
@@ -66,7 +67,7 @@ void DrawSnowflakes(Display* display, const Window& window, GC gc, Snowflakes& s
 	{
 		if (flake.x < width && flake.y < height)
 		{
-			XFillArc(display, window, gc, static_cast<int>(flake.x), static_cast<int>(flake.y), flake.size, flake.size, 0, 360 * 64);
+			XFillArc(display, window, gc, static_cast<int>(flake.x), static_cast<int>(flake.y), flake.size, flake.size, 0, ARC_MAX_ANGLE);
 		}
 	}
 }
@@ -136,6 +137,7 @@ int main()
 
 		const auto deltaTime = timer.Restart();
 		UpdateSnowflakes(snowflakes, displayWidth, displayHeight, deltaTime);
+		// Сделать без sleep
 		usleep(SLEEP_DURATION);
 	}
 
