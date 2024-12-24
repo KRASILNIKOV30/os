@@ -3,6 +3,7 @@
 #include <iostream>
 #include <numeric>
 #include <sstream>
+#include <thread>
 
 struct ServerMode
 {
@@ -54,42 +55,51 @@ inline int CalculateCommand(const std::string& command)
 	return Calculate(sign, numbers);
 }
 
+inline void HandleRequest(Socket& clientSocket, std::string const& command)
+{
+	int result;
+	try
+	{
+		result = CalculateCommand(command);
+	}
+	catch (const std::exception& e)
+	{
+		const std::string errorMessage = e.what();
+		clientSocket.Send(errorMessage.data(), errorMessage.size(), 0);
+		return;
+	}
+	const auto resultStr = std::to_string(result);
+	clientSocket.Send(resultStr.data(), resultStr.size(), 0);
+}
+
+inline void HandleClient(Socket&& clientSocket)
+{
+	char buffer[BufferSize];
+	for (size_t bytesRead; (bytesRead = clientSocket.Read(&buffer, sizeof(buffer))) > 0;)
+	{
+		const auto command = std::string(buffer, bytesRead);
+		HandleRequest(clientSocket, command);
+	}
+}
+
 [[noreturn]] inline void Run(const ServerMode& mode)
 {
 	const sockaddr_in serverAddr{
 		.sin_family = AF_INET,
 		.sin_port = htons(mode.port),
 		.sin_addr = { .s_addr = INADDR_ANY },
-		// The sin_port and sin_addr members are stored in network byte order.
 	};
 
 	const Acceptor acceptor{ serverAddr, 5 };
 
 	std::cout << "Listening to the port " << mode.port << std::endl;
 
+	std::vector<std::jthread> threads;
 	while (true)
 	{
 		std::cout << "Accepting" << std::endl;
 		auto clientSocket = acceptor.Accept();
 		std::cout << "Accepted" << std::endl;
-		char buffer[BufferSize];
-		for (size_t bytesRead; (bytesRead = clientSocket.Read(&buffer, sizeof(buffer))) > 0;)
-		{
-			int result;
-			const auto command = std::string(buffer, bytesRead);
-			try
-			{
-				result = CalculateCommand(command);
-			}
-			catch (const std::exception& e)
-			{
-				const std::string errorMessage = e.what();
-				clientSocket.Send(errorMessage.data(), errorMessage.size(), 0);
-				continue;
-			}
-			const auto resultStr = std::to_string(result);
-			clientSocket.Send(resultStr.data(), resultStr.size(), 0);
-		}
-		std::cout << "Client disconnected" << std::endl;
+		threads.emplace_back(HandleClient, std::move(clientSocket));
 	}
 }
