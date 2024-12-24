@@ -13,10 +13,17 @@ add_subdirectory(lab5)
 add_subdirectory(lab6)
 add_subdirectory(lab7)
 add_subdirectory(lab8)
+add_subdirectory(lab9)
 
 add_library(catch2 INTERFACE)
 add_library(timer INTERFACE)
 add_library(coutBuffer INTERFACE)
-target_include_directories(catch2 INTERFACE lib/catch2/)
-target_include_directories(timer INTERFACE lib/timer/)
-target_include_directories(coutBuffer INTERFACE lib/coutBuffer/)
+add_library(osWrappers INTERFACE
+        lab9/calculator/main.cpp)
+
+target_include_directories(
+        catch2 INTERFACE lib/catch2/
+        timer INTERFACE lib/timer/
+        coutBuffer INTERFACE lib/coutBuffer/
+        osWrappers INTERFACE lib/osWrappers/
+)

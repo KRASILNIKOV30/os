@@ -10,7 +10,7 @@
 #include <vector>
 
 constexpr int MAX_SNOWFLAKES = 2000;
-constexpr int SNOWFLAKES_SPEED = 30;
+constexpr int SNOWFLAKES_SPEED = 20;
 constexpr int SNOWFLAKES_SIZE = 2;
 constexpr int SLEEP_DURATION = 50000;
 constexpr int ARC_MIN_ANGLE = 0;
