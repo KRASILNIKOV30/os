@@ -21,6 +21,7 @@ public:
 
 	void Send(std::string const& message)
 	{
+		// передавать длину сообщения
 		if (send(m_fd.Get(), message.data(), message.size(), 0) == -1)
 		{
 			throw std::runtime_error("Failed to send message");

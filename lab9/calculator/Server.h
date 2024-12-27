@@ -94,6 +94,7 @@ inline void HandleClient(Socket&& clientSocket)
 
 	std::cout << "Listening to the port " << mode.port << std::endl;
 
+	// вектор будет разрастаться
 	std::vector<std::jthread> threads;
 	while (true)
 	{
