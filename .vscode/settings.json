@@ -69,7 +69,16 @@
         "syncstream": "cpp",
         "thread": "cpp",
         "typeinfo": "cpp",
-        "variant": "cpp"
+        "variant": "cpp",
+        "charconv": "cpp",
+        "cinttypes": "cpp",
+        "format": "cpp",
+        "*.in": "cpp",
+        "enum_set": "cpp",
+        "typeindex": "cpp",
+        "complex": "cpp",
+        "source_location": "cpp",
+        "ranges": "cpp"
     },
     "editor.formatOnSave": true,
     "clang-format.executable": "/usr/bin/clang-format",
