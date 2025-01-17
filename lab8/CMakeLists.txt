@@ -16,3 +16,24 @@ else ()
 endif ()
 
 target_link_libraries(snowflakes ${X11_LIBRARIES})
+
+find_package(wxWidgets REQUIRED COMPONENTS core base)
+if(wxWidgets_USE_FILE)
+    include(${wxWidgets_USE_FILE})
+endif()
+
+add_executable(todo-list
+        todoList/Model.h
+        todoList/SignallingValue.h
+        todoList/ViewModel.h
+        todoList/View.h
+        todoList/main.cpp
+        todoList/
+)
+
+target_link_libraries(todo-list
+        ${wxWidgets_LIBRARIES}
+)
+
+set_target_properties(todo-list PROPERTIES LINKER_LANGUAGE CXX)
+

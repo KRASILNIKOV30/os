@@ -78,9 +78,23 @@
         "typeindex": "cpp",
         "complex": "cpp",
         "source_location": "cpp",
-        "ranges": "cpp"
+        "ranges": "cpp",
+        "any": "cpp",
+        "*.ipp": "cpp",
+        "csetjmp": "cpp",
+        "strstream": "cpp",
+        "barrier": "cpp",
+        "coroutine": "cpp",
+        "forward_list": "cpp",
+        "rope": "cpp",
+        "slist": "cpp",
+        "latch": "cpp",
+        "cfenv": "cpp",
+        "valarray": "cpp",
+        "hash_map": "cpp"
     },
     "editor.formatOnSave": true,
     "clang-format.executable": "/usr/bin/clang-format",
+    "C_Cpp.clang_format_style": "file",
     "C_Cpp.errorSquiggles": "disabled"
 }
