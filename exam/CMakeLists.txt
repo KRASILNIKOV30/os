@@ -1,0 +1,1 @@
+add_executable(spinlock main.cpp)

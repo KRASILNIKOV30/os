@@ -15,6 +15,8 @@ add_subdirectory(lab7)
 add_subdirectory(lab8)
 add_subdirectory(lab9)
 add_subdirectory(lab10-crossplatform)
+add_subdirectory(exam)
+add_subdirectory(nfa_to_dfa)
 
 add_library(catch2 INTERFACE)
 add_library(timer INTERFACE)
