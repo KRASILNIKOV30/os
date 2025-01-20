@@ -1,0 +1,15 @@
+add_executable(
+        GrammarToDSM
+        main.cpp
+        Common/GrammarSide.h
+        GrammarParser/GrammarParser.cpp
+        GrammarParser/GrammarParser.h
+        MachineSaver/MachineSaver.cpp
+        MachineSaver/MachineSaver.h
+        Machine/Machine.h
+        Converter/DSMConverter.cpp
+        Converter/DSMConverter.h
+        Common/Utils.h
+        Common/Lettering.h
+        Common/DotFileGenerator.h
+)

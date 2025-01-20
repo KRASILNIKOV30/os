@@ -1,0 +1,6 @@
+int num = 15;
+/* multi
+line
+comment
+
+while (lit = "a")

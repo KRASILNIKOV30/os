@@ -1,0 +1,13 @@
+add_executable(
+        Converter
+        main.cpp
+        Args/Args.h
+        Args/ArgsParser.h
+        Common/Lettering.h
+        Machine/Machine.h
+        MachineMinimizator/MachineMinimizator.h
+        MachineMinimizator/MachineMinimizator.cpp
+        MachineSaver/MachineSaver.h
+        TextParser/CSVTextParser.h
+        Common/DotFileGenerator.h
+)
